@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <SurfaceView
+        android:id="@+id/video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageButton
+        android:id="@+id/btn_pause"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/ic_action_pause"
+        android:visibility="invisible" />
+
+    <com.Meteors.android.meteors.ui.ThumbView
+        android:id="@+id/btn_praise"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerInParent="true"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/ic_action_thumb"/>
+
+    <ImageButton
+        android:id="@+id/btn_comment"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_below="@+id/btn_praise"
+        android:layout_alignParentEnd="true"
+        android:layout_centerInParent="true"
+        android:layout_margin="10dp"
+        android:background="@drawable/ic_action_comment" />
+
+    <LinearLayout
+        android:id="@+id/container_ifo"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="15dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txt_ownerId"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="\@范佳兴范佳兴 "
+            android:textSize="20sp"
+            android:textStyle="italic|bold" />
+
+        <TextView
+            android:id="@+id/txt_videoText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:text="图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活" />
+    </LinearLayout>
+
+</RelativeLayout>
