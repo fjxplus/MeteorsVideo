@@ -1,23 +1,19 @@
 package com.Meteors.android.meteors.ui
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
-import android.view.View
-import android.view.animation.AccelerateInterpolator
-import android.view.animation.Animation
 import android.view.animation.AnticipateInterpolator
-import android.widget.ImageView
-import androidx.core.content.res.ResourcesCompat
 import com.Meteors.android.meteors.R
 
 private const val TAG = "VideoAdapter"
 
+/**
+ * ThumbView点赞动画
+ */
 class ThumbView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
     androidx.appcompat.widget.AppCompatImageView(context, attrs, defStyleAttr) {
     constructor(context: Context): this(context, null)

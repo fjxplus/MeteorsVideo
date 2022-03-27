@@ -8,63 +8,75 @@ import android.view.SurfaceHolder
 import android.widget.Toast
 import java.lang.Exception
 
-private const val TAG = "VideoAdapter"
-private const val TAG1 = "Test"
-class MediaPlayerPool(private val context: Context, private val list: List<String>) {
-    private val mLruCache = LruCache<Int, MediaPlayer>(5)
+private const val TAG = "Meteors_MediaPlayerPool"
+
+class MediaPlayerPool(private val context: Context, private val list: List<String>, private val windowWidth: Int) {
+    private val mLruCache = MLruCache(5)
     private val preCacheCount = 2
     private var player: MediaPlayer? = null
     private var curPosition = -1
-    private val hashmap = HashMap<Int, Boolean>()
 
     fun load(position: Int) {
-        val player = mediaPlayerInstance(position)
         //创建缓存
-        for (i in 1..preCacheCount) {
+        for (i in 0..preCacheCount) {
             if (position + i < list.size) {
                 mediaPlayerInstance(position + i)
             }
         }
     }
 
-    fun startVideo(position: Int, surfaceHolder: SurfaceHolder, holderInitialized: Boolean){
-        pauseVideo()
-        Log.d(TAG1, "curPosition is $curPosition, position is $position, $holderInitialized")
-
+    fun startVideo(position: Int, surfaceHolder: SurfaceHolder, holderInitialized: Boolean) {
+        if (curPosition != position) {
+            player?.pause()
+        }
         curPosition = position
 
-        if(holderInitialized){
-            player = mediaPlayerInstance(position)
-            player!!.setDisplay(surfaceHolder)
-            //出问题
-            if(hashmap[position] == false){
-                player!!.setOnPreparedListener{
-                    Log.d(TAG1, "player prepared()")
-                    player!!.start()
-                }
-            }else{
-                player!!.start()
-            }
+        if (!holderInitialized) {
+            return
+        }
 
+        player = mediaPlayerInstance(position)
+        player!!.setDisplay(surfaceHolder)
+
+        if (!mLruCache.initMap.containsKey(position)) {
+            player!!.setOnPreparedListener {
+                Log.d(TAG, "player-$position prepared()")
+                val multiple = windowWidth * 1.0/ player!!.videoWidth
+                val newHeight = (multiple * player!!.videoHeight).toInt()
+                surfaceHolder.setFixedSize(windowWidth,  newHeight)
+                Log.d(TAG, ", originWidth = ${player!!.videoWidth}, nowSize = $windowWidth, originHeight = ${player!!.videoHeight * multiple}," +
+                        "now = ${player!!.videoHeight * multiple}")
+                player!!.start()
+                mLruCache.initMap[position] = true
+            }
+        } else {
+            val multiple = windowWidth * 1.0/ player!!.videoWidth
+            val newHeight = (multiple * player!!.videoHeight).toInt()
+            surfaceHolder.setFixedSize(windowWidth,  newHeight)
+            player!!.start()
+        }
+
+    }
+
+    fun pauseVideo() {
+        if(mLruCache.initMap.containsKey(curPosition)){
+            if(player!!.isPlaying){
+                player!!.pause()
+            }else{
+                player?.start()
+            }
         }
     }
 
-    fun surfaceCreatedFinished(position: Int, surfaceHolder: SurfaceHolder){
-        Log.d(TAG1, "curPosition is $curPosition, position is $position")
-
-            startVideo(position, surfaceHolder, true)
-
-    }
-
-    fun pauseVideo(){
-        player?.pause()
-    }
-
-    fun isPaused(): Boolean{
+    fun isPaused(): Boolean {
         player?.apply {
             return !isPlaying
         }
         return true
+    }
+
+    fun restart(){
+        player?.seekTo(0)
     }
 
     private fun mediaPlayerInstance(position: Int): MediaPlayer {
@@ -72,24 +84,26 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
 
         if (player == null) {
             player = MediaPlayer()
+            mLruCache.put(position, player)
             try {
                 val fd = context.assets.openFd(list[position])
                 player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
+
                 player.prepareAsync()
-                player.setOnPreparedListener{
-                    Log.d(TAG1, "player prepared()")
-                    hashmap[position] = true
+                player.isLooping = true
+                player.setOnPreparedListener {
+                    Log.d(TAG, "player-$position prepared()")
+                    mLruCache.initMap[position] = true
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "视频-${list[position]} 加载失败", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
-
-            mLruCache.put(position, player)
         }
 
         return player
     }
+
 
     /*
     private fun releasePlayer(){
@@ -102,5 +116,19 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
 
      */
 
+    private class MLruCache(maxSize: Int): LruCache<Int, MediaPlayer>(maxSize){
+        val initMap = HashMap<Int, Boolean>()
+        override fun entryRemoved(
+            evicted: Boolean,
+            key: Int?,
+            oldValue: MediaPlayer?,
+            newValue: MediaPlayer?
+        ) {
+            super.entryRemoved(evicted, key, oldValue, newValue)
+            Log.d(TAG, "mediaPlayer-$key has been evicted()")
+            oldValue?.release()
+            initMap.remove(key)
+        }
+    }
 
 }
