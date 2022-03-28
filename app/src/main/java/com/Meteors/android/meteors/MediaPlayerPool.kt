@@ -41,11 +41,9 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
         if (!mLruCache.initMap.containsKey(position)) {
             player!!.setOnPreparedListener {
                 Log.d(TAG, "player-$position prepared()")
-                val multiple = windowWidth * 1.0/ player!!.videoWidth
+                val multiple = windowWidth * 1.0/ player!!.videoWidth   //根据屏幕宽度获取伸缩系数
                 val newHeight = (multiple * player!!.videoHeight).toInt()
-                surfaceHolder.setFixedSize(windowWidth,  newHeight)
-                Log.d(TAG, ", originWidth = ${player!!.videoWidth}, nowSize = $windowWidth, originHeight = ${player!!.videoHeight * multiple}," +
-                        "now = ${player!!.videoHeight * multiple}")
+                surfaceHolder.setFixedSize(windowWidth,  newHeight)     //为Surface设置新的宽高
                 player!!.start()
                 mLruCache.initMap[position] = true
             }

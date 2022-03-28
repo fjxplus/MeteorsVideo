@@ -2,7 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/like"
+        android:icon="@drawable/ic_action_thumb"
         android:title="喜欢" />
     <item android:id="@+id/collection"
-        android:title="收藏"/>
+        android:icon="@drawable/ic_action_comment"
+        android:title="私信"/>
 </menu>
