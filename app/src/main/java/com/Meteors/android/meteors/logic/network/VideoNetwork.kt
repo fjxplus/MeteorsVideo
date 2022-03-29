@@ -1,5 +1,6 @@
 package com.Meteors.android.meteors.logic.network
 
+import android.util.Log
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -7,6 +8,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+private const val TAG = "Meteors_Network"
 /**
  * 网络数据源访问入口
  */
@@ -29,11 +31,13 @@ object VideoNetwork {
                     if(body != null){
                         continuation.resume(body)
                     }else{
-                        continuation.resumeWithException(RuntimeException("响应超时"))
+                        Log.d(TAG, "VideoNetwork, Call响应数据为空")
+                        continuation.resumeWithException(RuntimeException("VideoNetwork响应超时"))
                     }
                 }
 
                 override fun onFailure(call: Call<T>, t: Throwable) {
+                    Log.d(TAG, "VideoNetwork, Call执行失败")
                     continuation.resumeWithException(t)
                 }
 

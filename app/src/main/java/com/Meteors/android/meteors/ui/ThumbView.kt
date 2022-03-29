@@ -1,15 +1,18 @@
 package com.Meteors.android.meteors.ui
 
+import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.animation.Animation
 import android.view.animation.AnticipateInterpolator
+import android.view.animation.AnticipateOvershootInterpolator
 import com.Meteors.android.meteors.R
 
-private const val TAG = "VideoAdapter"
+private const val TAG = "Meteors_ThumbView"
 
 /**
  * ThumbView点赞动画
@@ -33,7 +36,7 @@ class ThumbView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
+    @SuppressLint("UseCompatLoadingForDrawables", "Recycle")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
         background = if(!isChecked){
@@ -48,14 +51,18 @@ class ThumbView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         paint.color = Color.RED
         paint.colorFilter = object: PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN){}
         canvas?.drawBitmap(bitmap, 0f, 0f, paint)
-
-
          */
-        val objectAnimator = ObjectAnimator.ofFloat(this, "translationY", -100f)
-        objectAnimator.interpolator = object: AnticipateInterpolator(){}
-        objectAnimator.duration = 1000
-        objectAnimator.repeatMode = ObjectAnimator.REVERSE
-        objectAnimator.start()
+
+        //放大动画
+        val animatorSet = AnimatorSet()
+        val xAnimator = ObjectAnimator.ofFloat(this, "scaleX", 0.7f, 1.5f ,1f)
+        val yAnimator = ObjectAnimator.ofFloat(this, "scaleY", 0.7f, 1.5f, 1f)
+        xAnimator.interpolator = object: AnticipateOvershootInterpolator(){}
+        yAnimator.interpolator = object: AnticipateOvershootInterpolator(){}
+        xAnimator.duration = 1000
+        yAnimator.duration = 1000
+        animatorSet.play(xAnimator).with(yAnimator)
+        animatorSet.start()
 
         return true
     }

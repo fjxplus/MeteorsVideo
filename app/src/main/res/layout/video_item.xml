@@ -40,17 +40,16 @@
     <LinearLayout
         android:id="@+id/container_ifo"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_margin="10dp"
+        android:layout_marginBottom="15dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/txt_ownerId"
             android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:text="\@范佳兴范佳兴 "
+            android:layout_height="wrap_content"
             android:textSize="20sp"
             android:textColor="@color/white"
             android:textStyle="italic|bold" />
@@ -58,10 +57,10 @@
         <TextView
             android:id="@+id/txt_videoText"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="3"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:textColor="@color/white"
-            android:text="图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活图书馆自习生活" />
+            android:maxLines="4"/>
     </LinearLayout>
 
 </RelativeLayout>

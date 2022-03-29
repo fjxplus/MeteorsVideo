@@ -1,8 +1,10 @@
 package com.Meteors.android.meteors.logic.network
 
+import android.util.Log
 import androidx.lifecycle.liveData
 import kotlinx.coroutines.Dispatchers
 
+private const val TAG = "Meteors_Repository"
 /**
  * 仓库类
  */
@@ -15,6 +17,7 @@ object Repository {
             val videos = videoListResponse.videos
             Result.success(videos)
         }catch (e: Exception){
+            Log.d(TAG, "Repository无法获取VideoList")
             Result.failure(e)
         }
         emit(result)
@@ -27,6 +30,7 @@ object Repository {
             //对视频文件流进行读取
             Result.success(videoStream)
         }catch (e: Exception){
+            Log.d(TAG, "Repository无法获取Video")
             Result.failure(e)
         }
         emit(result)
@@ -38,6 +42,7 @@ object Repository {
             val commentList = VideoNetwork.getComment(id).commentList
             Result.success(commentList)
         }catch (e: Exception){
+            Log.d(TAG, "Repository无法获取Comment")
             Result.failure(e)
         }
         emit(result)

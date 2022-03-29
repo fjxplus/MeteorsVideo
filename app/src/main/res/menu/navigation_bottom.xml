@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/recommend"
-        android:icon="@drawable/ic_action_thumb"
-        android:title="推荐" />
     <item android:id="@+id/collect"
         android:icon="@drawable/ic_action_collect"
         android:title="收藏"/>
+    <item android:id="@+id/recommend"
+        android:icon="@drawable/ic_action_thumb"
+        android:title="推荐" />
+    <item android:id="@+id/live"
+        android:icon="@drawable/ic_action_live"
+        android:title="直播" />
+
 </menu>

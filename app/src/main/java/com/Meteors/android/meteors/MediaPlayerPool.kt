@@ -6,11 +6,21 @@ import android.util.Log
 import android.util.LruCache
 import android.view.SurfaceHolder
 import android.widget.Toast
+import com.Meteors.android.meteors.logic.model.VideoResponse
 import java.lang.Exception
 
 private const val TAG = "Meteors_MediaPlayerPool"
 
-class MediaPlayerPool(private val context: Context, private val list: List<String>, private val windowWidth: Int) {
+class MediaPlayerPool(
+    private val context: Context,
+    private val list: List<VideoResponse>,
+    private val sourceType: Int,
+    private val windowWidth: Int
+) {
+    companion object{
+        const val SOURCE_NET = 1        //视频来源为网络
+        const val SOURCE_ASSETS = 2     //视频来源为assets目录
+    }
     private val mLruCache = MLruCache(5)
     private val preCacheCount = 2
     private var player: MediaPlayer? = null
@@ -41,26 +51,26 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
         if (!mLruCache.initMap.containsKey(position)) {
             player!!.setOnPreparedListener {
                 Log.d(TAG, "player-$position prepared()")
-                val multiple = windowWidth * 1.0/ player!!.videoWidth   //根据屏幕宽度获取伸缩系数
+                val multiple = windowWidth * 1.0 / player!!.videoWidth   //根据屏幕宽度获取伸缩系数
                 val newHeight = (multiple * player!!.videoHeight).toInt()
-                surfaceHolder.setFixedSize(windowWidth,  newHeight)     //为Surface设置新的宽高
+                surfaceHolder.setFixedSize(windowWidth, newHeight)     //为Surface设置新的宽高
                 player!!.start()
                 mLruCache.initMap[position] = true
             }
         } else {
-            val multiple = windowWidth * 1.0/ player!!.videoWidth
+            val multiple = windowWidth * 1.0 / player!!.videoWidth
             val newHeight = (multiple * player!!.videoHeight).toInt()
-            surfaceHolder.setFixedSize(windowWidth,  newHeight)
+            surfaceHolder.setFixedSize(windowWidth, newHeight)
             player!!.start()
         }
 
     }
 
     fun pauseVideo() {
-        if(mLruCache.initMap.containsKey(curPosition)){
-            if(player!!.isPlaying){
+        if (mLruCache.initMap.containsKey(curPosition)) {
+            if (player!!.isPlaying) {
                 player!!.pause()
-            }else{
+            } else {
                 player?.start()
             }
         }
@@ -73,7 +83,13 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
         return true
     }
 
-    fun restart(){
+    //清除缓存
+    fun release(){
+        player?.pause()
+        mLruCache.evictAll()
+    }
+
+    fun restart() {
         player?.seekTo(0)
     }
 
@@ -84,9 +100,18 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
             player = MediaPlayer()
             mLruCache.put(position, player)
             try {
-                val fd = context.assets.openFd(list[position])
-                player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
-
+                when(sourceType){
+                    SOURCE_ASSETS -> {
+                        val fd = context.assets.openFd("${list[position].id}.mp4")
+                        player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
+                    }
+                    SOURCE_NET -> {
+                        player.setDataSource(context, list[position].uri)
+                    }
+                    else -> {
+                        throw Throwable("视频来源不存在。")
+                    }
+                }
                 player.prepareAsync()
                 player.isLooping = true
                 player.setOnPreparedListener {
@@ -94,7 +119,7 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
                     mLruCache.initMap[position] = true
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "视频-${list[position]} 加载失败", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "视频-${list[position].id} 加载失败", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
         }
@@ -102,19 +127,7 @@ class MediaPlayerPool(private val context: Context, private val list: List<Strin
         return player
     }
 
-
-    /*
-    private fun releasePlayer(){
-        Log.d(TAG, "mediaPlayer release()")
-        if(isInitialized){
-            mediaPlayer.release()
-            isInitialized = false
-        }
-    }
-
-     */
-
-    private class MLruCache(maxSize: Int): LruCache<Int, MediaPlayer>(maxSize){
+    private class MLruCache(maxSize: Int) : LruCache<Int, MediaPlayer>(maxSize) {
         val initMap = HashMap<Int, Boolean>()
         override fun entryRemoved(
             evicted: Boolean,
