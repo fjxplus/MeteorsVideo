@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.lifecycle.Lifecycle
 import com.Meteors.android.meteors.databinding.ActivityMainBinding
 import com.Meteors.android.meteors.ui.AssetsVideoFragment
+import com.Meteors.android.meteors.ui.LiveVideoFragment
 import com.Meteors.android.meteors.ui.NetVideoFragment
 
 private const val TAG = "Meteors_MainActivity"
@@ -37,6 +38,17 @@ class MainActivity : AppCompatActivity() {
         //监听底部导航栏点击事件
         binding.navigationBottom.setOnItemSelectedListener {
             when (it.itemId) {
+                R.id.collect -> {
+                    Log.d(TAG, "clicked 收藏")
+                    if (supportFragmentManager.findFragmentByTag(TAG_FRAGMENT_RECOMMEND) == null) {
+                        // 添加推荐界面的Fragment
+                        val fragment = AssetsVideoFragment()
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment, TAG_FRAGMENT_RECOMMEND)
+                            .commit()
+                    }
+                }
+
                 R.id.recommend -> {
                     Log.d(TAG, "clicked 推荐")
                     if (supportFragmentManager.findFragmentByTag(TAG_FRAGMENT_COLLECT) == null) {
@@ -50,14 +62,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.live -> {
                     Log.d(TAG, "clicked 直播")
                     Toast.makeText(this, "进入直播", Toast.LENGTH_SHORT).show()
-                }
-                R.id.collect -> {
-                    Log.d(TAG, "clicked 收藏")
-                    if (supportFragmentManager.findFragmentByTag(TAG_FRAGMENT_RECOMMEND) == null) {
+                    if (supportFragmentManager.findFragmentByTag(TAG_FRAGMENT_LIVE) == null) {
                         // 添加推荐界面的Fragment
-                        val fragment = AssetsVideoFragment()
+                        val fragment = LiveVideoFragment()
                         supportFragmentManager.beginTransaction()
-                            .replace(R.id.fragment_container, fragment, TAG_FRAGMENT_RECOMMEND)
+                            .replace(R.id.fragment_container, fragment, TAG_FRAGMENT_LIVE)
                             .commit()
                     }
                 }

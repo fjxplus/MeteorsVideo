@@ -33,6 +33,11 @@ class MediaPlayerPool(
                 mediaPlayerInstance(position + i)
             }
         }
+        for(i in 1..preCacheCount){
+            if (position - i >= 0){
+                mediaPlayerInstance((position - i))
+            }
+        }
     }
 
     fun startVideo(position: Int, surfaceHolder: SurfaceHolder, holderInitialized: Boolean) {
@@ -70,8 +75,14 @@ class MediaPlayerPool(
         if (mLruCache.initMap.containsKey(curPosition)) {
             if (player!!.isPlaying) {
                 player!!.pause()
-            } else {
-                player?.start()
+            }
+        }
+    }
+
+    fun resumeVideo() {
+        if (mLruCache.initMap.containsKey(curPosition)) {
+            if (!player!!.isPlaying) {
+                player!!.start()
             }
         }
     }

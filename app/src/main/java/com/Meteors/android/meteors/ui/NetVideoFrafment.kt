@@ -99,7 +99,7 @@ class NetVideoFragment : Fragment() {
         //刷新组件的监听
         binding.refresh.setOnRefreshListener {
             Log.d(TAG, "refresh")
-            mediaPlayerPool.pauseVideo()
+            mediaPlayerPool.release()
             binding.refresh.isRefreshing = true
             viewModel.videos.clear()
             viewModel.getVideoList()        //向网络层请求数据，并对数据进行监听
@@ -114,7 +114,7 @@ class NetVideoFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        mediaPlayerPool
+        mediaPlayerPool.release()
     }
 
     /**
@@ -148,13 +148,13 @@ class NetVideoFragment : Fragment() {
             when (v?.id) {
 
                 R.id.btn_praise -> {
-
+                    Toast.makeText(context, "clicked 点赞", Toast.LENGTH_SHORT).show()
                 }
                 R.id.btn_comment -> {
-
+                    Toast.makeText(context, "clicked 评论", Toast.LENGTH_SHORT).show()
                 }
                 R.id.txt_ownerId -> {
-
+                    Toast.makeText(context, "clicked ID", Toast.LENGTH_SHORT).show()
                 }
                 R.id.btn_pause -> {
                     pauseVideo()
@@ -179,7 +179,7 @@ class NetVideoFragment : Fragment() {
          */
         fun pauseVideo() {
             if (mediaPlayerPool.isPaused()) {
-                mediaPlayerPool.pauseVideo()
+                mediaPlayerPool.resumeVideo()
                 itemBinding.btnPause.visibility = View.INVISIBLE
             } else {
                 mediaPlayerPool.pauseVideo()
@@ -220,7 +220,7 @@ class NetVideoFragment : Fragment() {
         private var scrollState = 0     //用于判断滚动状态
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
-            val itemBinding = VideoItemBinding.inflate(layoutInflater, parent, false)
+            val itemBinding = VideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             return VideoHolder(itemBinding)
         }
 

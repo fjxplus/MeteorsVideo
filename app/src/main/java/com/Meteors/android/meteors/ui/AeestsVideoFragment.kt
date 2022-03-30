@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -136,13 +137,13 @@ class AssetsVideoFragment : Fragment() {
             when (v?.id) {
 
                 R.id.btn_praise -> {
-
+                    Toast.makeText(context, "clicked 点赞", Toast.LENGTH_SHORT).show()
                 }
                 R.id.btn_comment -> {
-
+                    Toast.makeText(context, "clicked 评论", Toast.LENGTH_SHORT).show()
                 }
                 R.id.txt_ownerId -> {
-
+                    Toast.makeText(context, "clicked ID", Toast.LENGTH_SHORT).show()
                 }
                 R.id.btn_pause -> {
                     pauseVideo()
@@ -167,7 +168,7 @@ class AssetsVideoFragment : Fragment() {
          */
         fun pauseVideo(){
             if (mediaPlayerPool.isPaused()) {
-                mediaPlayerPool.pauseVideo()
+                mediaPlayerPool.resumeVideo()
                 itemBinding.btnPause.visibility = View.INVISIBLE
             } else {
                 mediaPlayerPool.pauseVideo()
@@ -208,7 +209,7 @@ class AssetsVideoFragment : Fragment() {
         private var scrollState = 0     //用于判断滚动状态
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
-            val itemBinding = VideoItemBinding.inflate(layoutInflater, parent, false)
+            val itemBinding = VideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             return VideoHolder(itemBinding)
         }
 

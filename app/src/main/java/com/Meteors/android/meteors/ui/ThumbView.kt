@@ -7,8 +7,6 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.animation.Animation
-import android.view.animation.AnticipateInterpolator
 import android.view.animation.AnticipateOvershootInterpolator
 import com.Meteors.android.meteors.R
 
