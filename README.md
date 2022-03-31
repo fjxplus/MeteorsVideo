@@ -3,7 +3,7 @@
 
 ## 1.视频播放界面
 
-<img src="C:\Users\范佳兴\Desktop\播放网络视频.jpg" alt="播放网络视频" style="zoom:67%;" />
+<img src="C:\Users\范佳兴\Desktop\播放网络视频.gif" alt="播放网络视频" style="zoom:67%;" />
 
 ## 2.直播界面
 
