@@ -25,8 +25,7 @@ import com.Meteors.android.meteors.logic.model.VideoResponse
 private const val TAG = "Meteors_NetFragment"
 
 /**
- * NetVideoFragment
- * 播放服务器的视频，对应底部导航栏为推荐
+ * @Description: 播放服务器的视频，对应底部导航栏为推荐
  */
 class NetVideoFragment : Fragment() {
 
@@ -35,8 +34,6 @@ class NetVideoFragment : Fragment() {
     private var _binding: FragmentMainBinding? = null
 
     private val binding get() = _binding!!      //当前布局的ViewBinding
-
-    private lateinit var mediaPlayerPool: MediaPlayerPool       //MediaPlayer的集中管理工具类
 
     private lateinit var videoAdapter: VideoAdapter     //Adapter
 
@@ -49,9 +46,9 @@ class NetVideoFragment : Fragment() {
     ): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         binding.refresh.isRefreshing = true
-
         //配置RecyclerView
-        val pagerSnapHelper = MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
+        val pagerSnapHelper =
+            MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
         videoAdapter = VideoAdapter(viewModel.videos)
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -59,7 +56,9 @@ class NetVideoFragment : Fragment() {
             pagerSnapHelper.attachToRecyclerView(this)
         }
 
-        viewModel.getVideoList()        //向网络层请求数据，并对数据进行监听
+        if (!viewModel.mediaPlayerIsInitialiazed()) {
+            viewModel.getVideoList()        //向网络层请求数据，并对数据进行监听
+        }
         viewModel.videoList.observe(viewLifecycleOwner, Observer { result ->
             val videos = result.getOrNull()
             if (videos != null) {
@@ -67,7 +66,7 @@ class NetVideoFragment : Fragment() {
                 viewModel.videos.addAll(videos)
                 val windowWidth =
                     requireActivity().windowManager.currentWindowMetrics.bounds.width()     //获取屏幕宽度，用于视频缩放
-                mediaPlayerPool = MediaPlayerPool(
+                viewModel.mediaPlayerPool = viewModel.initMediaPlayerPool(
                     requireContext(),
                     viewModel.videos,
                     MediaPlayerPool.SOURCE_NET,
@@ -99,22 +98,20 @@ class NetVideoFragment : Fragment() {
         //刷新组件的监听
         binding.refresh.setOnRefreshListener {
             Log.d(TAG, "refresh")
-            mediaPlayerPool.release()
+            viewModel.refresh()
             binding.refresh.isRefreshing = true
-            viewModel.videos.clear()
             viewModel.getVideoList()        //向网络层请求数据，并对数据进行监听
         }
     }
 
     override fun onPause() {
         super.onPause()
-        mediaPlayerPool.pauseVideo()
+        videoAdapter.curHolder.pauseVideo()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        mediaPlayerPool.release()
     }
 
     /**
@@ -135,7 +132,7 @@ class NetVideoFragment : Fragment() {
         fun onBind(position: Int, video: VideoResponse) {
             Log.d(TAG, "viewHolder($position) onBind()")
             this.curPosition = position
-            mediaPlayerPool.load(position)
+            viewModel.mediaPlayerPool.load(position)
             itemBinding.root.setOnClickListener(this)
             holder.addCallback(this)
             //设置文字信息
@@ -170,7 +167,7 @@ class NetVideoFragment : Fragment() {
          */
         fun startVideo() {
             Log.d(TAG, "Holder-${curPosition} startVideo()")
-            mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
+            viewModel.mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
             itemBinding.btnPause.visibility = View.INVISIBLE
         }
 
@@ -178,11 +175,11 @@ class NetVideoFragment : Fragment() {
          * 暂停或继续播放视频
          */
         fun pauseVideo() {
-            if (mediaPlayerPool.isPaused()) {
-                mediaPlayerPool.resumeVideo()
+            if (viewModel.mediaPlayerPool.isPaused()) {
+                viewModel.mediaPlayerPool.resumeVideo()
                 itemBinding.btnPause.visibility = View.INVISIBLE
             } else {
-                mediaPlayerPool.pauseVideo()
+                viewModel.mediaPlayerPool.pauseVideo()
                 itemBinding.btnPause.visibility = View.VISIBLE
             }
         }
@@ -193,7 +190,7 @@ class NetVideoFragment : Fragment() {
         override fun surfaceCreated(holder: SurfaceHolder) {
             Log.d(TAG, "surfaceCreated")
             isInitialized = true
-            mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
+            viewModel.mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
             itemBinding.btnPause.visibility = View.INVISIBLE
         }
 
@@ -215,12 +212,15 @@ class NetVideoFragment : Fragment() {
     private inner class VideoAdapter(val videoList: List<VideoResponse>) :
         RecyclerView.Adapter<VideoHolder>() {
 
-        private var curHolder = HashSet<VideoHolder>()      //用于保存当前屏幕上的VideoHolder
+        var curHolderContainer = HashSet<VideoHolder>()      //用于保存当前屏幕上的VideoHolder
+
+        val curHolder: VideoHolder get() = curHolderContainer.first()
 
         private var scrollState = 0     //用于判断滚动状态
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
-            val itemBinding = VideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            val itemBinding =
+                VideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             return VideoHolder(itemBinding)
         }
 
@@ -243,7 +243,7 @@ class NetVideoFragment : Fragment() {
          */
         override fun onViewAttachedToWindow(holder: VideoHolder) {
             super.onViewAttachedToWindow(holder)
-            curHolder.add(holder)
+            curHolderContainer.add(holder)
         }
 
         /**
@@ -251,7 +251,7 @@ class NetVideoFragment : Fragment() {
          */
         override fun onViewDetachedFromWindow(holder: VideoHolder) {
             super.onViewDetachedFromWindow(holder)
-            curHolder.remove(holder)
+            curHolderContainer.remove(holder)
         }
 
         /**
@@ -263,7 +263,7 @@ class NetVideoFragment : Fragment() {
             when (newState) {
                 RecyclerView.SCROLL_STATE_IDLE -> {
                     if (scrollState == 1) {
-                        curHolder.first().startVideo()
+                        curHolder.startVideo()
                         scrollState = 0
                     }
                 }
@@ -272,7 +272,6 @@ class NetVideoFragment : Fragment() {
                 }
             }
         }
-
     }
 
     private class MyPagerSnapHelper : PagerSnapHelper() {}

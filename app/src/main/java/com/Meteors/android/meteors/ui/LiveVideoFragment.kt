@@ -15,9 +15,8 @@ import com.Meteors.android.meteors.databinding.FragmentLiveBinding
 private const val TAG = "Meteors_Live_Fragment"
 
 /**
- * LiveVideoFragment
- * 直播界面，可以进行礼物的赠送和评论的发送
- */
+* @Description:  直播界面的Fragment，可以进行礼物的赠送
+*/
 class LiveVideoFragment : Fragment() {
 
     private var _binding: FragmentLiveBinding? = null

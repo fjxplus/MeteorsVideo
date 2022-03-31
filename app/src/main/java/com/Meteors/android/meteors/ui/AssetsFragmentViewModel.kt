@@ -1,26 +1,11 @@
 package com.Meteors.android.meteors.ui
 
 import android.content.Context
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.Meteors.android.meteors.MediaPlayerPool
 import com.Meteors.android.meteors.logic.model.VideoResponse
-import com.Meteors.android.meteors.logic.network.Repository
 
-class NetFragmentViewModel : ViewModel() {
-    private val videoListLiveData = MutableLiveData<Any>()
-
-    val videos = ArrayList<VideoResponse>()
-
-    val videoList = Transformations.switchMap(videoListLiveData) {
-        Repository.getVideoList()
-    }
-
-    //获取视频接口，触发LiveData转换，向网络层获取视频
-    fun getVideoList() {
-        videoListLiveData.value = videoListLiveData.value
-    }
+class AssetsFragmentViewModel: ViewModel() {
 
     lateinit var mediaPlayerPool: MediaPlayerPool       //MediaPlayer的集中管理工具类
 
@@ -40,12 +25,6 @@ class NetFragmentViewModel : ViewModel() {
     //判断mediaPlayerPool是否实例化
     fun mediaPlayerIsInitialiazed(): Boolean {
         return this::mediaPlayerPool.isInitialized
-    }
-
-    //刷新，重新获取视频列表，对原有数据进行清除
-    fun refresh(){
-        mediaPlayerPool.release()
-        videos.clear()
     }
 
     //释放mediaPlayerPool

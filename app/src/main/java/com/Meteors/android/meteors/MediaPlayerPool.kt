@@ -11,6 +11,11 @@ import java.lang.Exception
 
 private const val TAG = "Meteors_MediaPlayerPool"
 
+/**
+ * @Description: 管理者一个存储MediaPlayer的LruCache，进行LRU缓存机制，对弹出的MediaPlayer进行资源释放
+ * 具有加载MediaPlayer，开始播放，暂停播放，释放所有资源的功能
+ * @Param:  Context, 视频信息列表，视频来源类型，屏幕宽度
+ */
 class MediaPlayerPool(
     private val context: Context,
     private val list: List<VideoResponse>,
@@ -21,7 +26,7 @@ class MediaPlayerPool(
         const val SOURCE_NET = 1        //视频来源为网络
         const val SOURCE_ASSETS = 2     //视频来源为assets目录
     }
-    private val mLruCache = MLruCache(5)
+    private val mLruCache = MLruCache(7)
     private val preCacheCount = 2
     private var player: MediaPlayer? = null
     private var curPosition = -1
@@ -40,6 +45,11 @@ class MediaPlayerPool(
         }
     }
 
+    /**
+    * @Description:  开始播放视频，如果SurfaceView已经加载完毕，将MediaPlayer和SurfaceView进行绑定
+    * @Param:  position:视频下标索引, surfaceHolder: 和Player进行绑定, holderInitialized: SurfaceView是否加载完成
+    * @return:  void
+    */
     fun startVideo(position: Int, surfaceHolder: SurfaceHolder, holderInitialized: Boolean) {
         if (curPosition != position) {
             player?.pause()
@@ -71,6 +81,7 @@ class MediaPlayerPool(
 
     }
 
+    //暂停视频
     fun pauseVideo() {
         if (mLruCache.initMap.containsKey(curPosition)) {
             if (player!!.isPlaying) {
@@ -79,14 +90,16 @@ class MediaPlayerPool(
         }
     }
 
+    //开始播放暂停的视频
     fun resumeVideo() {
-        if (mLruCache.initMap.containsKey(curPosition)) {
+        if (mLruCache.initMap.containsKey(curPosition)) {       //判断当前实例player是否已经初始化
             if (!player!!.isPlaying) {
                 player!!.start()
             }
         }
     }
 
+    //暂停当前播放视频
     fun isPaused(): Boolean {
         player?.apply {
             return !isPlaying
@@ -104,14 +117,19 @@ class MediaPlayerPool(
         player?.seekTo(0)
     }
 
+    /**
+    * @Description: 创建MediaPlayer实例的方法
+    * @Param:  视频下标
+    * @return:  MediaPlayer
+    */
     private fun mediaPlayerInstance(position: Int): MediaPlayer {
-        var player: MediaPlayer? = mLruCache.get(position)
+        var player: MediaPlayer? = mLruCache.get(position)  //如果缓存中实例命中，则返回已有的实例
 
-        if (player == null) {
+        if (player == null) {       //不存在就创建
             player = MediaPlayer()
             mLruCache.put(position, player)
             try {
-                when(sourceType){
+                when(sourceType){       //根据不同类型的文件来源进行不同的路径设置，分为assets目录资源和网络Url
                     SOURCE_ASSETS -> {
                         val fd = context.assets.openFd("${list[position].id}.mp4")
                         player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
@@ -123,11 +141,11 @@ class MediaPlayerPool(
                         throw Throwable("视频来源不存在。")
                     }
                 }
-                player.prepareAsync()
+                player.prepareAsync()       //后台加载
                 player.isLooping = true
                 player.setOnPreparedListener {
                     Log.d(TAG, "player-$position prepared()")
-                    mLruCache.initMap[position] = true
+                    mLruCache.initMap[position] = true      //加载完毕在map中进行标记加载完成
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "视频-${list[position].id} 加载失败", Toast.LENGTH_SHORT).show()
@@ -138,6 +156,11 @@ class MediaPlayerPool(
         return player
     }
 
+
+    /**
+    * @Description:  重写entryRemoved()方法，对移除的MediaPlayer进行资源的释放
+    * @Param:  LruCache最大容量
+    */
     private class MLruCache(maxSize: Int) : LruCache<Int, MediaPlayer>(maxSize) {
         val initMap = HashMap<Int, Boolean>()
         override fun entryRemoved(

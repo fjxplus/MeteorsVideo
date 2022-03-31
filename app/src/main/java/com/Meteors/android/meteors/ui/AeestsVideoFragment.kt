@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -22,16 +23,15 @@ import com.Meteors.android.meteors.logic.model.VideoResponse
 private const val TAG = "Meteors_Assets_Fragment"
 
 /**
- * AssetsVideoFragment
- * 播放assets目录下的视频文件，对应底部导航栏为收藏
- */
+* @Description: 播放assets目录下的视频文件，对应底部导航栏为收藏
+*/
 class AssetsVideoFragment : Fragment() {
+
+    private val viewModel by lazy { ViewModelProvider(this).get(AssetsFragmentViewModel::class.java) }
 
     private var _binding: FragmentMainBinding? = null
 
     private val binding get() = _binding!!      //当前布局的ViewBinding
-
-    private lateinit var mediaPlayerPool: MediaPlayerPool       //MediaPlayer的集中管理工具类
 
     private lateinit var videoAdapter: VideoAdapter     //Adapter
 
@@ -45,10 +45,13 @@ class AssetsVideoFragment : Fragment() {
 
         //实例化MediaPlayerPool
         val videoList = getVideoList()
-        val windowWidth =
-            requireActivity().windowManager.currentWindowMetrics.bounds.width()     //获取屏幕宽度，用于视频缩放
-        mediaPlayerPool =
-            MediaPlayerPool(requireContext(), videoList, MediaPlayerPool.SOURCE_ASSETS, windowWidth)
+
+        if(!viewModel.mediaPlayerIsInitialiazed()){
+            val windowWidth =
+                requireActivity().windowManager.currentWindowMetrics.bounds.width()     //获取屏幕宽度，用于视频缩放
+            viewModel.mediaPlayerPool =
+                viewModel.initMediaPlayerPool(requireContext(), videoList, MediaPlayerPool.SOURCE_ASSETS, windowWidth)
+        }
 
         //配置RecyclerView
         val pagerSnapHelper = MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
@@ -88,13 +91,12 @@ class AssetsVideoFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        mediaPlayerPool.pauseVideo()
+        videoAdapter.curHolder.pauseVideo()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        mediaPlayerPool.release()
     }
 
     private fun getVideoList(): List<VideoResponse>{
@@ -124,7 +126,7 @@ class AssetsVideoFragment : Fragment() {
         fun onBind(position: Int, video: VideoResponse) {
             Log.d(TAG, "viewHolder($position) onBind()")
             this.curPosition = position
-            mediaPlayerPool.load(position)
+            viewModel.mediaPlayerPool.load(position)
             itemBinding.root.setOnClickListener(this)
             holder.addCallback(this)
             //设置文字信息
@@ -159,7 +161,7 @@ class AssetsVideoFragment : Fragment() {
          */
         fun startVideo() {
             Log.d(TAG, "Holder-${curPosition} startVideo()")
-            mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
+            viewModel.mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
             itemBinding.btnPause.visibility = View.INVISIBLE
         }
 
@@ -167,11 +169,11 @@ class AssetsVideoFragment : Fragment() {
          * 暂停或继续播放视频
          */
         fun pauseVideo(){
-            if (mediaPlayerPool.isPaused()) {
-                mediaPlayerPool.resumeVideo()
+            if (viewModel.mediaPlayerPool.isPaused()) {
+                viewModel.mediaPlayerPool.resumeVideo()
                 itemBinding.btnPause.visibility = View.INVISIBLE
             } else {
-                mediaPlayerPool.pauseVideo()
+                viewModel.mediaPlayerPool.pauseVideo()
                 itemBinding.btnPause.visibility = View.VISIBLE
             }
         }
@@ -182,7 +184,7 @@ class AssetsVideoFragment : Fragment() {
         override fun surfaceCreated(holder: SurfaceHolder) {
             Log.d(TAG, "surfaceCreated")
             isInitialized = true
-            mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
+            viewModel.mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
             itemBinding.btnPause.visibility = View.INVISIBLE
         }
 
@@ -198,13 +200,14 @@ class AssetsVideoFragment : Fragment() {
     }
 
     /**
-     * VideoAdapter
-     * RecyclerView适配器，对滚动状态进行监听，在当前屏幕上的VieHolder中进行视频播放
-     */
+    * @Description: RecyclerView适配器，对滚动状态进行监听，在当前屏幕上的VieHolder中进行视频播放
+    */
     private inner class VideoAdapter(val videoList: List<VideoResponse>) :
         RecyclerView.Adapter<VideoHolder>() {
 
-        private var curHolder = HashSet<VideoHolder>()      //用于保存当前屏幕上的VideoHolder
+        var curHolderContainer = HashSet<VideoHolder>()      //用于保存当前屏幕上的VideoHolder
+
+        val curHolder: VideoHolder get() = curHolderContainer.first()
 
         private var scrollState = 0     //用于判断滚动状态
 
@@ -232,7 +235,7 @@ class AssetsVideoFragment : Fragment() {
          */
         override fun onViewAttachedToWindow(holder: VideoHolder) {
             super.onViewAttachedToWindow(holder)
-            curHolder.add(holder)
+            curHolderContainer.add(holder)
         }
 
         /**
@@ -240,19 +243,20 @@ class AssetsVideoFragment : Fragment() {
          */
         override fun onViewDetachedFromWindow(holder: VideoHolder) {
             super.onViewDetachedFromWindow(holder)
-            curHolder.remove(holder)
+            curHolderContainer.remove(holder)
         }
 
         /**
-         * 对RecyclerView的滑动事件进行监听
-         * 当滑动之后页面不变的情况下，SCROLL_STATE_IDLE会进行两次回调，中间发生一次SCROLL_STATE_SETTLING
-         * scrollState用来判断滚动事件的结束，我们只要最后一次SCROLL_STATE_IDLE
-         */
+        * @Description: RecyclerView的滑动事件进行监听
+        * 当滑动之后页面不变的情况下，SCROLL_STATE_IDLE会进行两次回调，中间发生一次SCROLL_STATE_SETTLING
+        * scrollState用来判断滚动事件的结束，我们只要最后一次SCROLL_STATE_IDLE
+        * @Param: 滚动状态
+        */
         fun onScrollStateChanged(newState: Int) {
             when (newState) {
                 RecyclerView.SCROLL_STATE_IDLE -> {
                     if (scrollState == 1) {
-                        curHolder.first().startVideo()
+                        curHolder.startVideo()
                         scrollState = 0
                     }
                 }
