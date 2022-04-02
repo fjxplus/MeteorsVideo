@@ -3,15 +3,13 @@ package com.Meteors.android.meteors.ui
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.SurfaceHolder
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.Meteors.android.meteors.MediaPlayerPool
@@ -35,6 +33,8 @@ class AssetsVideoFragment : Fragment() {
 
     private lateinit var videoAdapter: VideoAdapter     //Adapter
 
+    private lateinit var recyclerViewLayoutManager: CommentLinearLayoutManager
+
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,15 +55,15 @@ class AssetsVideoFragment : Fragment() {
 
         //配置RecyclerView
         val pagerSnapHelper = MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
+        recyclerViewLayoutManager = CommentLinearLayoutManager(requireContext())
         videoAdapter = VideoAdapter(videoList)
         binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            layoutManager = recyclerViewLayoutManager
             adapter = videoAdapter
             pagerSnapHelper.attachToRecyclerView(this)
         }
         binding.imgHint.visibility = View.INVISIBLE
         binding.recyclerView.visibility = View.VISIBLE
-
         return binding.root
     }
 
@@ -112,14 +112,16 @@ class AssetsVideoFragment : Fragment() {
      * VideoHolder
      */
     private inner class VideoHolder(val itemBinding: VideoItemBinding) :
-        RecyclerView.ViewHolder(itemBinding.root), View.OnClickListener, SurfaceHolder.Callback {
+        RecyclerView.ViewHolder(itemBinding.root), SurfaceHolder.Callback {
 
         private var curPosition = 0     //存储当前Holder的视频播放位置
 
         private val holder: SurfaceHolder = itemBinding.video.holder    //当前界面的SurfaceHolder
 
         private var isInitialized = false       //记录Surface的加载状态
-
+        private var isCommentOpen = false
+        private var isPraised = false
+        private var isAnimated = false
         /**
          * 发出加载MediaPlayer的请求
          */
@@ -127,33 +129,101 @@ class AssetsVideoFragment : Fragment() {
             Log.d(TAG, "viewHolder($position) onBind()")
             this.curPosition = position
             viewModel.mediaPlayerPool.load(position)
-            itemBinding.root.setOnClickListener(this)
             holder.addCallback(this)
+            val data = listOf<String>("fa", "fdgfa", "fasdwer", "trer", "fa", "fdgfa", "fasdwer", "trer", "fa", "fdgfa", "fasdwer", "trer", "fa", "fdgfa", "fasdwer", "trer")
+            val listViewAdapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1, data)
+            itemBinding.listView.adapter = listViewAdapter
             //设置文字信息
             itemBinding.txtOwnerId.text = video.ownerId
             itemBinding.txtVideoText.text = video.adTxt
-        }
-
-        //按钮点击事件监听
-        override fun onClick(v: View?) {
-            when (v?.id) {
-
-                R.id.btn_praise -> {
-                    Toast.makeText(context, "clicked 点赞", Toast.LENGTH_SHORT).show()
+            val clickListener = View.OnClickListener { v ->
+                if(isAnimated){
+                    return@OnClickListener
                 }
-                R.id.btn_comment -> {
-                    Toast.makeText(context, "clicked 评论", Toast.LENGTH_SHORT).show()
+                if (isCommentOpen){     //如果当前评论区已打开，先关闭评论区
+                    isAnimated = true
+                    itemBinding.videoItem.setTransition(R.id.transition_commentOpen_origin)
+                    itemBinding.videoItem.transitionToEnd()
+                    return@OnClickListener
                 }
-                R.id.txt_ownerId -> {
-                    Toast.makeText(context, "clicked ID", Toast.LENGTH_SHORT).show()
-                }
-                R.id.btn_pause -> {
-                    pauseVideo()
-                }
-                else -> {
-                    pauseVideo()
+                when (v?.id) {
+                    R.id.btn_praise -> {
+                        Log.d("test", "isPraised = $isPraised")
+                        isAnimated = true
+                        if(!isPraised){
+                            itemBinding.videoItem.setTransition(R.id.transition_thumb_up)
+                            itemBinding.videoItem.transitionToEnd()
+                        }else{
+                            itemBinding.videoItem.setTransition(R.id.transition_cancel_thumb)
+                            itemBinding.videoItem.transitionToEnd()
+                        }
+                        isPraised = !isPraised
+                    }
+                    R.id.btn_comment -> {
+                        Log.d("test", "comment")
+                        isAnimated = true
+                        itemBinding.videoItem.setTransition(R.id.transition_origin_commentOpen)
+                        itemBinding.videoItem.transitionToEnd()
+                        isCommentOpen = true
+                    }
+                    R.id.txt_ownerId -> {
+                        Toast.makeText(context, "clicked ID", Toast.LENGTH_SHORT).show()
+                    }
+                    R.id.txt_videoText -> {
+                        Toast.makeText(context, "clicked ad", Toast.LENGTH_SHORT).show()
+                    }
+                    R.id.btn_pause -> {
+                        pauseVideo()
+                    }
+                    else -> {
+                        pauseVideo()
+                    }
                 }
             }
+            itemBinding.videoItem.setOnClickListener(clickListener)
+            itemBinding.btnPraise.setOnClickListener(clickListener)
+            itemBinding.btnComment.setOnClickListener(clickListener)
+            itemBinding.btnPause.setOnClickListener(clickListener)
+            itemBinding.txtOwnerId.setOnClickListener(clickListener)
+            itemBinding.txtVideoText.setOnClickListener(clickListener)
+            itemBinding.video.setOnClickListener(clickListener)
+
+            //监听MotionLayout的动画状态
+            itemBinding.videoItem.setTransitionListener(object: MotionLayout.TransitionListener{
+                override fun onTransitionStarted(
+                    motionLayout: MotionLayout?,
+                    startId: Int,
+                    endId: Int
+                ) {
+                    if(endId == R.id.constrainSet_comment_open){        //评论区打开时RecyclerView不应滑动
+                        recyclerViewLayoutManager.setCanScrollVertically(false)
+                        binding.refresh.isEnabled = false
+                        isCommentOpen = true
+                    }else if(endId == R.id.constrainSet_origin){
+                        isCommentOpen = false
+                    }
+                }
+
+                override fun onTransitionChange(
+                    motionLayout: MotionLayout?,
+                    startId: Int,
+                    endId: Int,
+                    progress: Float
+                ) { }
+                override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
+                    if(currentId == R.id.constrainSet_origin){         //评论区关闭时，RecyclerView可以滑动
+                        recyclerViewLayoutManager.setCanScrollVertically(true)
+                        binding.refresh.isEnabled = true
+                    }
+                    isAnimated = false
+                }
+                override fun onTransitionTrigger(
+                    motionLayout: MotionLayout?,
+                    triggerId: Int,
+                    positive: Boolean,
+                    progress: Float
+                ) { }
+            })
         }
 
         /**
@@ -206,9 +276,7 @@ class AssetsVideoFragment : Fragment() {
         RecyclerView.Adapter<VideoHolder>() {
 
         var curHolderContainer = HashSet<VideoHolder>()      //用于保存当前屏幕上的VideoHolder
-
         val curHolder: VideoHolder get() = curHolderContainer.first()
-
         private var scrollState = 0     //用于判断滚动状态
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
@@ -265,7 +333,6 @@ class AssetsVideoFragment : Fragment() {
                 }
             }
         }
-
     }
 
     private class MyPagerSnapHelper : PagerSnapHelper() {}

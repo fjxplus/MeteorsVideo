@@ -8,12 +8,13 @@ import android.view.LayoutInflater
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.Meteors.android.meteors.MediaPlayerPool
@@ -37,6 +38,8 @@ class NetVideoFragment : Fragment() {
 
     private lateinit var videoAdapter: VideoAdapter     //Adapter
 
+    private lateinit var recyclerViewLayoutManager: CommentLinearLayoutManager
+
     @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
@@ -49,9 +52,10 @@ class NetVideoFragment : Fragment() {
         //配置RecyclerView
         val pagerSnapHelper =
             MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
+        recyclerViewLayoutManager = CommentLinearLayoutManager(requireContext())
         videoAdapter = VideoAdapter(viewModel.videos)
         binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            layoutManager = recyclerViewLayoutManager
             adapter = videoAdapter
             pagerSnapHelper.attachToRecyclerView(this)
         }
@@ -83,7 +87,6 @@ class NetVideoFragment : Fragment() {
         })
         return binding.root
     }
-
     override fun onStart() {
         super.onStart()
 
@@ -125,7 +128,9 @@ class NetVideoFragment : Fragment() {
         private val holder: SurfaceHolder = itemBinding.video.holder    //当前界面的SurfaceHolder
 
         private var isInitialized = false       //记录Surface的加载状态
-
+        private var isCommentOpen = false
+        private var isPraised = false
+        private var isAnimated = false
         /**
          * 发出加载MediaPlayer的请求
          */
@@ -135,9 +140,102 @@ class NetVideoFragment : Fragment() {
             viewModel.mediaPlayerPool.load(position)
             itemBinding.root.setOnClickListener(this)
             holder.addCallback(this)
+            val data = listOf<String>("fa", "fdgfa", "fasdwer", "trer", "fa", "fdgfa", "fasdwer", "trer", "fa", "fdgfa", "fasdwer", "trer", "fa", "fdgfa", "fasdwer", "trer")
+            val listViewAdapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1, data)
+            itemBinding.listView.adapter = listViewAdapter
             //设置文字信息
             itemBinding.txtOwnerId.text = video.ownerId
             itemBinding.txtVideoText.text = video.adTxt
+
+            //创建点击事件监听
+            val clickListener = View.OnClickListener { v ->
+                if(isAnimated){
+                    return@OnClickListener
+                }
+                if (isCommentOpen){     //如果当前评论区已打开，先关闭评论区
+                    isAnimated = true
+                    itemBinding.videoItem.setTransition(R.id.transition_commentOpen_origin)
+                    itemBinding.videoItem.transitionToEnd()
+                    return@OnClickListener
+                }
+                when (v?.id) {
+                    R.id.btn_praise -> {
+                        Log.d("test", "isPraised = $isPraised")
+                        isAnimated = true
+                        if(!isPraised){
+                            itemBinding.videoItem.setTransition(R.id.transition_thumb_up)
+                            itemBinding.videoItem.transitionToEnd()
+                        }else{
+                            itemBinding.videoItem.setTransition(R.id.transition_cancel_thumb)
+                            itemBinding.videoItem.transitionToEnd()
+                        }
+                        isPraised = !isPraised
+                    }
+                    R.id.btn_comment -> {
+                        Log.d("test", "comment")
+                        isAnimated = true
+                        itemBinding.videoItem.setTransition(R.id.transition_origin_commentOpen)
+                        itemBinding.videoItem.transitionToEnd()
+                        isCommentOpen = true
+                    }
+                    R.id.txt_ownerId -> {
+                        Toast.makeText(context, "clicked ID", Toast.LENGTH_SHORT).show()
+                    }
+                    R.id.txt_videoText -> {
+                        Toast.makeText(context, "clicked ad", Toast.LENGTH_SHORT).show()
+                    }
+                    R.id.btn_pause -> {
+                        pauseVideo()
+                    }
+                    else -> {
+                        pauseVideo()
+                    }
+                }
+            }
+            itemBinding.videoItem.setOnClickListener(clickListener)
+            itemBinding.btnPraise.setOnClickListener(clickListener)
+            itemBinding.btnComment.setOnClickListener(clickListener)
+            itemBinding.btnPause.setOnClickListener(clickListener)
+            itemBinding.txtOwnerId.setOnClickListener(clickListener)
+            itemBinding.txtVideoText.setOnClickListener(clickListener)
+            itemBinding.video.setOnClickListener(clickListener)
+
+            //监听MotionLayout的动画状态
+            itemBinding.videoItem.setTransitionListener(object: MotionLayout.TransitionListener{
+                override fun onTransitionStarted(
+                    motionLayout: MotionLayout?,
+                    startId: Int,
+                    endId: Int
+                ) {
+                    if(endId == R.id.constrainSet_comment_open){        //评论区打开时RecyclerView不应滑动
+                        recyclerViewLayoutManager.setCanScrollVertically(false)
+                        binding.refresh.isEnabled = false
+                        isCommentOpen = true
+                    }else if(endId == R.id.constrainSet_origin){
+                        isCommentOpen = false
+                    }
+                }
+
+                override fun onTransitionChange(
+                    motionLayout: MotionLayout?,
+                    startId: Int,
+                    endId: Int,
+                    progress: Float
+                ) { }
+                override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
+                    if(currentId == R.id.constrainSet_origin){         //评论区关闭时，RecyclerView可以滑动
+                        recyclerViewLayoutManager.setCanScrollVertically(true)
+                        binding.refresh.isEnabled = true
+                    }
+                    isAnimated = false
+                }
+                override fun onTransitionTrigger(
+                    motionLayout: MotionLayout?,
+                    triggerId: Int,
+                    positive: Boolean,
+                    progress: Float
+                ) { }
+            })
         }
 
         //按钮点击事件监听

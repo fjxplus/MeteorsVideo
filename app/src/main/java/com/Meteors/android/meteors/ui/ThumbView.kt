@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.animation.AnticipateOvershootInterpolator
 import com.Meteors.android.meteors.R
@@ -15,6 +16,7 @@ private const val TAG = "Meteors_ThumbView"
 /**
  * ThumbView点赞动画
  */
+
 class ThumbView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
     androidx.appcompat.widget.AppCompatImageView(context, attrs, defStyleAttr) {
     constructor(context: Context): this(context, null)
@@ -34,9 +36,11 @@ class ThumbView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
+
     @SuppressLint("UseCompatLoadingForDrawables", "Recycle")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
+        Log.d("test", "ThumbView onTouchEvent()")
         background = if(!isChecked){
             resources.getDrawable(R.drawable.ic_action_thumb_up, context.theme)
         }else{
@@ -63,6 +67,10 @@ class ThumbView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         animatorSet.start()
 
         return true
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
+        return super.dispatchTouchEvent(event)
     }
 
 }
