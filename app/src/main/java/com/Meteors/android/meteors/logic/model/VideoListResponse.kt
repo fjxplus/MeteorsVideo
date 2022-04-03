@@ -9,11 +9,15 @@ data class VideoListResponse(val videos: List<VideoResponse>)
 data class VideoResponse(
     val id: String,
     @SerializedName("owner_id") val ownerId: String,
+    @SerializedName("owner_name") val ownerName: String,
     @SerializedName("ad_txt") val adTxt: String
-){
+) {
     val uri: Uri get() = Uri.parse("${ServiceCreator.BASE_URL}/video/$id.mp4")
 }
 
-data class CommentListResponse(val commentList: List<Comment>)
+data class CommentListResponse(
+    @SerializedName("video_id") val videoId: String,
+    val comments: List<Comment>
+)
 
-data class Comment(val id: String, val txt: String)
+data class Comment(@SerializedName("user_id") val userId: String, val txt: String)

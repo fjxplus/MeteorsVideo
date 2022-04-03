@@ -1,4 +1,4 @@
-package com.Meteors.android.meteors.ui
+package com.Meteors.android.meteors.ui.ShortVideo.assets
 
 import android.content.Context
 import androidx.lifecycle.ViewModel

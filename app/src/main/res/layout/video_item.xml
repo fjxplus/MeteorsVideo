@@ -29,13 +29,24 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.utils.widget.ImageFilterView
-        android:id="@+id/btn_praise"
+        android:id="@+id/img_owner"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginEnd="8dp"
+        app:roundPercent="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        tools:background="@tools:sample/date/ddmmyy"/>
+
+    <androidx.constraintlayout.utils.widget.ImageFilterView
+        android:id="@+id/btn_praise"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/img_owner"
         app:srcCompat="@drawable/ic_action_thumb_down"
         app:altSrc="@drawable/ic_action_thumb_up"/>
 
@@ -91,8 +102,8 @@
             android:layout_margin="8dp"
             android:layout_gravity="center_horizontal"
             android:background="@color/blue_700"/>
-        <ListView
-            android:id="@+id/listView"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_comment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             />

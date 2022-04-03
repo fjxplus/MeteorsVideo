@@ -1,4 +1,4 @@
-package com.Meteors.android.meteors.ui
+package com.Meteors.android.meteors.ui.LiveVideo
 
 import android.media.MediaPlayer
 import android.os.Build

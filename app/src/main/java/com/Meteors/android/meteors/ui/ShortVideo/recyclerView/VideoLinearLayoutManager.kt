@@ -1,4 +1,4 @@
-package com.Meteors.android.meteors.ui
+package com.Meteors.android.meteors.ui.ShortVideo.recyclerView
 
 import android.content.Context
 import android.util.AttributeSet
@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 * @Description: 重写LinearLayoutManager的 canScrollVertically()方法，禁止RecyclerView滑动
 * @Date: 2022/4/2
 */
-class CommentLinearLayoutManager(
+class VideoLinearLayoutManager(
     context: Context,
     attrs: AttributeSet?,
     defStyleAttr: Int,

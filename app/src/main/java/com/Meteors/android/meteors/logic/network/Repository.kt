@@ -37,14 +37,19 @@ object Repository {
     }
 
     //获取评论区列表
-    fun getComment(id: String) = liveData(Dispatchers.IO) {
+    fun getComments(videoId: String) = liveData(Dispatchers.IO) {
         val result = try {
-            val commentList = VideoNetwork.getComment(id).commentList
+            val commentList = VideoNetwork.getComment(videoId)
             Result.success(commentList)
         }catch (e: Exception){
             Log.d(TAG, "Repository无法获取Comment")
             Result.failure(e)
         }
         emit(result)
+    }
+
+    //获取用户头像URL
+    fun getUserImageUrl(userId: String): String{
+        return "${ServiceCreator.BASE_URL}image/user/$userId.jpg"
     }
 }

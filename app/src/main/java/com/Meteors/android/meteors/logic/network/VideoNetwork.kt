@@ -20,7 +20,7 @@ object VideoNetwork {
 
     suspend fun getVideo(id: String) = videoService.getVideo(id).await()
 
-    suspend fun getComment(id: String) = videoService.getComment(id).await()
+    suspend fun getComment(videoId: String) = videoService.getComments(videoId).await()
 
     //重写Call类型的await()方法，对响应的异常进行统一处理
     private suspend fun <T> Call<T>.await(): T{

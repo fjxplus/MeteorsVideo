@@ -8,9 +8,9 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.lifecycle.Lifecycle
 import com.Meteors.android.meteors.databinding.ActivityMainBinding
-import com.Meteors.android.meteors.ui.AssetsVideoFragment
-import com.Meteors.android.meteors.ui.LiveVideoFragment
-import com.Meteors.android.meteors.ui.NetVideoFragment
+import com.Meteors.android.meteors.ui.LiveVideo.LiveVideoFragment
+import com.Meteors.android.meteors.ui.ShortVideo.assets.AssetsVideoFragment
+import com.Meteors.android.meteors.ui.ShortVideo.net.NetVideoFragment
 
 private const val TAG = "Meteors_MainActivity"
 private const val TAG_FRAGMENT_RECOMMEND = "fragment_recommend"

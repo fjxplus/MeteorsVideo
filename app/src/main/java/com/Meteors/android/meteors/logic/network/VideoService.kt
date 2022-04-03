@@ -16,7 +16,7 @@ interface VideoService {
     @GET("video/{id}.mp4")
     fun getVideo(@Path("id") id: String):Call<ResponseBody>
 
-    @GET("comment/{id}.json")
-    fun getComment(@Path("id") id: String):Call<CommentListResponse>
+    @GET("video/comment/comments_{id}.json")
+    fun getComments(@Path("id") videoId: String):Call<CommentListResponse>
 
 }
