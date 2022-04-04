@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.Meteors.android.meteors.MediaPlayerPool
@@ -59,15 +60,28 @@ class AssetsVideoFragment : Fragment() {
         recyclerViewLayoutManager = VideoLinearLayoutManager(requireContext())
         val pagerSnapHelper =
             VideoAdapter.MyPagerSnapHelper()     //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
+        //实现VideoAdapter中未实现的高阶函数，需要Fragment提供实现，可以使用接口代替
         videoAdapter.setCanScrollVertically = { flag ->
             recyclerViewLayoutManager.setCanScrollVertically(flag)
             binding.refresh.isEnabled = flag
         }
+        //提供拿到MediaPlayer的方法
         videoAdapter.getMediaPlayerPool = {
             viewModel.mediaPlayerPool
         }
+        //获取评论区的接口方法
         videoAdapter.getCommentListResponse = {videoId, setCommentAdapter ->
-            //向ViewModel请求评论数据
+            viewModel.getComments(videoId)
+            viewModel.comments.observe(viewLifecycleOwner, Observer { result ->
+                val commentListResponse = result.getOrNull()
+                if(commentListResponse != null){
+                    if(commentListResponse.videoId == videoId){
+                        setCommentAdapter(commentListResponse.comments)
+                    }
+                }else{
+                    result.exceptionOrNull()?.printStackTrace()
+                }
+            })
         }
         binding.recyclerView.apply {
             layoutManager = recyclerViewLayoutManager
@@ -104,7 +118,9 @@ class AssetsVideoFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        videoAdapter.pauseVideo()
+        if(!viewModel.mediaPlayerPool.isPaused()){
+            videoAdapter.pauseVideo()
+        }
     }
 
     override fun onDestroyView() {

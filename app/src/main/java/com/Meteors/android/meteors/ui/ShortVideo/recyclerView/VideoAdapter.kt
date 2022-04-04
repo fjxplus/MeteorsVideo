@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.Meteors.android.meteors.MediaPlayerPool
@@ -292,6 +293,7 @@ class VideoAdapter(
          */
         fun getComments() {
             this@VideoAdapter.getCommentListResponse(videoList[curPosition].id) { comments ->
+                itemBinding.recyclerViewComment.layoutManager = LinearLayoutManager(context)
                 itemBinding.recyclerViewComment.adapter = CommentAdapter(context, comments)
             }
         }

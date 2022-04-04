@@ -1,16 +1,18 @@
 package com.Meteors.android.meteors
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import com.Meteors.android.meteors.databinding.ActivityMainBinding
 import com.Meteors.android.meteors.ui.LiveVideo.LiveVideoFragment
 import com.Meteors.android.meteors.ui.ShortVideo.assets.AssetsVideoFragment
 import com.Meteors.android.meteors.ui.ShortVideo.net.NetVideoFragment
+
 
 private const val TAG = "Meteors_MainActivity"
 private const val TAG_FRAGMENT_RECOMMEND = "fragment_recommend"

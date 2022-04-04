@@ -5,10 +5,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.Meteors.android.meteors.MediaPlayerPool
+import com.Meteors.android.meteors.logic.model.CommentListResponse
 import com.Meteors.android.meteors.logic.model.VideoResponse
 import com.Meteors.android.meteors.logic.network.Repository
 
 class NetFragmentViewModel : ViewModel() {
+
+    lateinit var mediaPlayerPool: MediaPlayerPool       //MediaPlayer的集中管理工具类
+
     private val videoListLiveData = MutableLiveData<Any>()
 
     val videos = ArrayList<VideoResponse>()
@@ -17,12 +21,11 @@ class NetFragmentViewModel : ViewModel() {
         Repository.getVideoList()
     }
 
-    //获取视频接口，触发LiveData转换，向网络层获取视频
-    fun getVideoList() {
-        videoListLiveData.value = videoListLiveData.value
-    }
+    private val commentsId = MutableLiveData<String>()
 
-    lateinit var mediaPlayerPool: MediaPlayerPool       //MediaPlayer的集中管理工具类
+    val comments = Transformations.switchMap(commentsId){
+        Repository.getComments(commentsId.value!!)
+    }
 
     //初始化mediaPlayerPool，如果未初始化就进行实例化
     fun initMediaPlayerPool(
@@ -46,6 +49,16 @@ class NetFragmentViewModel : ViewModel() {
     fun refresh(){
         mediaPlayerPool.release()
         videos.clear()
+    }
+
+    //获取视频接口，触发LiveData转换，向网络层获取视频
+    fun getVideoList() {
+        videoListLiveData.value = videoListLiveData.value
+    }
+
+    //获取评论的接口，向仓库获取评论数据
+    fun getComments(videoId: String){
+        commentsId.value = videoId
     }
 
     //释放mediaPlayerPool

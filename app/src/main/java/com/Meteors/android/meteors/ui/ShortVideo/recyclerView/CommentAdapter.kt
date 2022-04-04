@@ -33,6 +33,7 @@ class CommentAdapter(private val context: Context, private val comments: List<Co
         RecyclerView.ViewHolder(itemBinding.root) {
 
         fun bind(comment: Comment) {
+            //增加加载中的提示
             itemBinding.textUserId.text = comment.userId
             itemBinding.textComment.text = comment.txt
             Glide.with(context)
