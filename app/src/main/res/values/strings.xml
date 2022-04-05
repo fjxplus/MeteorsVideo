@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Meteors</string>
+    <string name="btn_comment">发送</string>
+    <string name="edit_comment_hint">说点什么吧！</string>
+    <string name="loading">加载中...</string>
+    <string name="collect">收藏</string>
+    <string name="recommend">推荐</string>
+    <string name="live_video">直播</string>
+    <string name="like">喜欢</string>
+    <string name="chat">私信</string>
+    <string name="search">搜索</string>
 </resources>

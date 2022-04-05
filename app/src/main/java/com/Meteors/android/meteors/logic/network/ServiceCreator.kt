@@ -3,6 +3,9 @@ package com.Meteors.android.meteors.logic.network
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+/**
+* @Description: Retrofit网络接口构建器
+*/
 object ServiceCreator {
 
     const val BASE_URL = "http://47.101.162.133/meteors/"

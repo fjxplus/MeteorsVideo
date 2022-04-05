@@ -1,7 +1,6 @@
 package com.Meteors.android.meteors.ui.ShortVideo.assets
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel

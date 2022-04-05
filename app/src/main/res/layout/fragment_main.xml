@@ -33,7 +33,7 @@
                 android:layout_gravity="center_horizontal"
                 android:textColor="@color/white"
                 android:textStyle="italic"
-                android:text="加载中..."/>
+                android:text="@string/loading"/>
         </LinearLayout>
     </RelativeLayout>
 

@@ -3,8 +3,8 @@
 
     <item android:id="@+id/like"
         android:icon="@drawable/ic_action_thumb"
-        android:title="喜欢" />
-    <item android:id="@+id/collection"
+        android:title="@string/like" />
+    <item android:id="@+id/chat"
         android:icon="@drawable/ic_action_comment"
-        android:title="私信"/>
+        android:title="@string/chat"/>
 </menu>

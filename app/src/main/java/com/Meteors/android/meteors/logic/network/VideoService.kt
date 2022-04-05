@@ -7,6 +7,9 @@ import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
 
+/**
+* @Description: BaseURL:http://47.101.162.133/meteors/ 所有网络接口
+*/
 interface VideoService {
 
     @GET("video_list.json")

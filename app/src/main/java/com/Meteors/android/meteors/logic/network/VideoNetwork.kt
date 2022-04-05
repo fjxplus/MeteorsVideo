@@ -10,8 +10,8 @@ import kotlin.coroutines.suspendCoroutine
 
 private const val TAG = "Meteors_Network"
 /**
- * 网络数据源访问入口
- */
+* @Description: 网络数据访问入口，由Repository调用
+*/
 object VideoNetwork {
 
     private val videoService = ServiceCreator.create<VideoService>()

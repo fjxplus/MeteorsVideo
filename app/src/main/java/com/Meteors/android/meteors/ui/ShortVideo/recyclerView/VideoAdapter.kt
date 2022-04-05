@@ -10,13 +10,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.Meteors.android.meteors.MediaPlayerPool
 import com.Meteors.android.meteors.R
 import com.Meteors.android.meteors.databinding.VideoItemBinding
-import com.Meteors.android.meteors.logic.model.Comment
 import com.Meteors.android.meteors.logic.model.VideoResponse
 import com.Meteors.android.meteors.logic.network.Repository
 import com.bumptech.glide.Glide
@@ -38,30 +36,13 @@ class VideoAdapter(
 
     private var scrollState = 0     //用于判断滚动状态
 
-    lateinit var setCanScrollVertically: (flag: Boolean) -> Unit
+    lateinit var getMediaPlayerPool: () -> MediaPlayerPool      //向Fragment获取MediaPlayerPool
 
-    lateinit var getMediaPlayerPool: () -> MediaPlayerPool
-
-    lateinit var getCommentListResponse: (videoId: String, setCommentAdapter: (comments: List<Comment>) -> Unit) -> Unit
+    lateinit var showComments: (videoId: String) -> Unit        //Fragment展示评论区
 
     val mediaPlayerPool: MediaPlayerPool get() = getMediaPlayerPool()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
-        try {
-            if (!this::setCanScrollVertically.isInitialized) {
-                throw IllegalStateException("setCanScrollVertically: (flag: Boolean) -> Unit 未初始化")
-            }
-            if (!this::getMediaPlayerPool.isInitialized) {
-                throw IllegalStateException("getMediaPlayerPool: () -> MediaPlayerPool 未初始化")
-            }
-            if (!this::getCommentListResponse.isInitialized) {
-                throw IllegalStateException("getCommentListResponse: (videoId: String, setCommentAdapter: " +
-                        "(comments: List<Comment>) -> Unit) -> Unit 未初始化")
-            }
-        }catch (e: Exception){
-            e.printStackTrace()
-        }
-
         val itemBinding =
             VideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return VideoHolder(itemBinding)
@@ -129,8 +110,6 @@ class VideoAdapter(
 
         private var isInitialized = false       //记录Surface的加载状态
 
-        private var isCommentOpen = false
-
         private var isPraised = false
 
         private var isAnimated = false
@@ -155,12 +134,6 @@ class VideoAdapter(
                 if (isAnimated) {
                     return@OnClickListener
                 }
-                if (isCommentOpen) {     //如果当前评论区已打开，先关闭评论区
-                    isAnimated = true
-                    itemBinding.videoItem.setTransition(R.id.transition_commentOpen_origin)
-                    itemBinding.videoItem.transitionToEnd()
-                    return@OnClickListener
-                }
                 when (v?.id) {
                     R.id.btn_praise -> {
                         isAnimated = true
@@ -174,17 +147,13 @@ class VideoAdapter(
                         isPraised = !isPraised
                     }
                     R.id.img_owner -> {
-                        Toast.makeText(context, "clicked Owner", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "clicked ${video.ownerName}", Toast.LENGTH_SHORT).show()
                     }
                     R.id.btn_comment -> {
-                        isAnimated = true
-                        itemBinding.videoItem.setTransition(R.id.transition_origin_commentOpen)
-                        itemBinding.videoItem.transitionToEnd()
-                        getComments()
-                        isCommentOpen = true
+                        showComments()
                     }
                     R.id.txt_ownerId -> {
-                        Toast.makeText(context, "clicked ID", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "clicked ${video.ownerName}", Toast.LENGTH_SHORT).show()
                     }
                     R.id.txt_videoText -> {
                         Toast.makeText(context, "clicked ad", Toast.LENGTH_SHORT).show()
@@ -213,12 +182,6 @@ class VideoAdapter(
                     startId: Int,
                     endId: Int
                 ) {
-                    if (endId == R.id.constrainSet_comment_open) {        //评论区打开时RecyclerView不应滑动
-                        setCanScrollVertically(false)
-                        isCommentOpen = true
-                    } else if (endId == R.id.constrainSet_origin) {
-                        isCommentOpen = false
-                    }
                 }
 
                 override fun onTransitionChange(
@@ -230,9 +193,6 @@ class VideoAdapter(
                 }
 
                 override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-                    if (currentId == R.id.constrainSet_origin) {         //评论区关闭时，RecyclerView可以滑动
-                        setCanScrollVertically(true)
-                    }
                     isAnimated = false
                 }
 
@@ -291,11 +251,8 @@ class VideoAdapter(
         /**
          * 向RecyclerView请求评论区数据
          */
-        fun getComments() {
-            this@VideoAdapter.getCommentListResponse(videoList[curPosition].id) { comments ->
-                itemBinding.recyclerViewComment.layoutManager = LinearLayoutManager(context)
-                itemBinding.recyclerViewComment.adapter = CommentAdapter(context, comments)
-            }
+        private fun showComments() {
+            this@VideoAdapter.showComments(videoList[curPosition].id)
         }
     }
 
