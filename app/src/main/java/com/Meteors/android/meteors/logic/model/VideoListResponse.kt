@@ -20,4 +20,8 @@ data class CommentListResponse(
     val comments: List<Comment>
 )
 
-data class Comment(@SerializedName("user_id") val userId: String, val txt: String)
+data class Comment(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("user_name") val userName: String,
+    val txt: String
+)

@@ -6,7 +6,8 @@ class MainApplication: Application() {
 
     companion object{
         //定义全局变量
-        var myId = "FanJiaxing"         //当前用户Id
+        var myId = "user_default"
+        var myName = "FanJiaxing"         //当前用户Id
     }
 
     override fun onCreate() {

@@ -40,7 +40,7 @@ class CommentAdapter(private val context: Context, private val comments: List<Co
 
         fun bind(position: Int, comment: Comment) {
             //增加加载中的提示
-            itemBinding.textUserId.text = comment.userId
+            itemBinding.textUserId.text = comment.userName
             itemBinding.textComment.text = comment.txt
             curPosition = position
             Glide.with(context)

@@ -126,13 +126,14 @@ class NetVideoFragment : Fragment() {
         commentBinding.btnCommentCommit.setOnClickListener { view ->
             val content = commentBinding.editComment.text.toString()
             if (content != "") {
-                val comment = Comment(MainApplication.myId, content)
+                val comment = Comment(MainApplication.myId,MainApplication.myName, content)
                 comments.add(0, comment)
                 commentBinding.recyclerViewComment.apply {
                     adapter?.notifyItemInserted(0)
                     smoothScrollToPosition(0)
                 }
-                commentBinding.editComment.setText("")
+                commentBinding.editComment.text?.clear()
+                Toast.makeText(requireContext(), "评论成功！", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -183,6 +184,8 @@ class NetVideoFragment : Fragment() {
     private fun showComment() {
         //重新设置CommentAdapter
         commentBinding.recyclerViewComment.adapter = CommentAdapter(requireContext(), comments)
+        commentBinding.editComment.text?.clear()
+
         val popUpView = PopupWindow(
             commentBinding.root,
             ViewGroup.LayoutParams.MATCH_PARENT,

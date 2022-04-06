@@ -2,6 +2,7 @@
 <androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_live"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layoutDescription="@xml/fragment_live_scene">
@@ -15,6 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/imageGift1"
         android:layout_width="60dp"
@@ -48,6 +50,52 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/gift_1" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/container_comment"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_margin="8dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.6">
+
+        <Switch
+            android:id="@+id/switch_bullet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:hint="@string/bullet"
+            android:textColorHint="@color/grey_200"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/edit_comment"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+        <EditText
+            android:id="@+id/edit_comment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/bullet_hint"
+            android:imeOptions="actionSend"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/white"
+            android:textColorHint="@color/grey_200"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/switch_bullet" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_comment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:alpha="0.6"
+            app:layout_constraintBottom_toTopOf="@+id/edit_comment"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <LinearLayout
         android:id="@+id/tableGift"
         android:layout_width="wrap_content"
@@ -60,15 +108,15 @@
         app:layout_constraintEnd_toStartOf="@+id/btnGift">
 
         <ImageButton
-            android:id="@+id/pack"
+            android:id="@+id/btn_pack"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_gravity="center_vertical"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_action_pack"/>
+            android:src="@drawable/ic_action_pack" />
 
         <ImageButton
-            android:id="@+id/gift1"
+            android:id="@+id/btn_gift1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
@@ -76,15 +124,12 @@
             android:src="@drawable/gift_1" />
 
         <ImageButton
-            android:id="@+id/gift2"
+            android:id="@+id/btn_gift2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:scaleType="centerInside"
             android:src="@drawable/gift_2" />
     </LinearLayout>
-
-
-
 
 </androidx.constraintlayout.motion.widget.MotionLayout>

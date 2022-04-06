@@ -54,6 +54,14 @@ class VideoAdapter(
         holder.onBind(position, video)
     }
 
+    /**
+    * @Description: payload实现局部刷新
+    */
+    override fun onBindViewHolder(holder: VideoHolder, position: Int, payloads: MutableList<Any>) {
+        super.onBindViewHolder(holder, position, payloads)
+
+    }
+
     override fun getItemCount(): Int {
         return videoList.size
     }

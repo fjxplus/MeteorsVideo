@@ -9,4 +9,7 @@
     <string name="like">喜欢</string>
     <string name="chat">私信</string>
     <string name="search">搜索</string>
+    <string name="bullet_hint">发条弹幕呗！</string>
+    <string name="bullet">公屏</string>
+    <string name="colon">:</string>
 </resources>

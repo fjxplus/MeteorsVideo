@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import com.Meteors.android.meteors.databinding.ActivityMainBinding
+import com.Meteors.android.meteors.logic.model.VideoResponse
 import com.Meteors.android.meteors.ui.LiveVideo.LiveVideoFragment
 import com.Meteors.android.meteors.ui.ShortVideo.assets.AssetsVideoFragment
 import com.Meteors.android.meteors.ui.ShortVideo.net.NetVideoFragment
@@ -63,10 +64,16 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.live -> {
                     Log.d(TAG, "clicked 直播")
-                    Toast.makeText(this, "进入直播", Toast.LENGTH_SHORT).show()
                     if (supportFragmentManager.findFragmentByTag(TAG_FRAGMENT_LIVE) == null) {
                         // 添加推荐界面的Fragment
-                        val fragment = LiveVideoFragment()
+                        val fragment = LiveVideoFragment.newInstance(
+                            VideoResponse(
+                                "VID_2",
+                                "FanJiaxing",
+                                "兴小范",
+                                "双11大促"
+                            )
+                        )
                         supportFragmentManager.beginTransaction()
                             .replace(R.id.fragment_container, fragment, TAG_FRAGMENT_LIVE)
                             .commit()
@@ -85,13 +92,5 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.toolbar_menu, menu)
         return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return super.onOptionsItemSelected(item)
-    }
-
-    override fun getLifecycle(): Lifecycle {
-        return super.getLifecycle()
     }
 }

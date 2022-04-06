@@ -4,13 +4,11 @@
     xmlns:motion="http://schemas.android.com/apk/res-auto">
 
     <Transition
+        android:id="@+id/transition_openGiftTable"
         motion:constraintSetEnd="@id/tableOpen"
         motion:constraintSetStart="@id/start"
         motion:duration="1000"
         motion:motionInterpolator="easeOut">
-        <OnClick
-            motion:targetId="@+id/btnGift"
-            motion:clickAction="transitionToEnd"/>
         <KeyFrameSet>
             <KeyAttribute
                 motion:motionTarget="@+id/tableGift"
@@ -20,32 +18,16 @@
     </Transition>
 
     <Transition
+        android:id="@+id/transition_closeGiftTable"
         motion:constraintSetStart="@+id/tableOpen"
         motion:constraintSetEnd="@+id/start">
-        <OnClick motion:targetId="@+id/btnGift"
-            motion:clickAction="transitionToEnd" />
     </Transition>
 
     <Transition
-        motion:constraintSetStart="@+id/tableOpen"
-        motion:constraintSetEnd="@+id/start">
-        <OnClick motion:targetId="@+id/pack"
-            motion:clickAction="transitionToEnd" />
-    </Transition>
-
-    <Transition
-        motion:constraintSetStart="@+id/tableOpen"
-        motion:constraintSetEnd="@+id/start">
-        <OnClick motion:targetId="@+id/btnGift"
-            motion:clickAction="transitionToEnd" />
-    </Transition>
-
-    <Transition
+        android:id="@+id/transition_sendGift1"
         motion:constraintSetStart="@+id/tableOpen"
         motion:constraintSetEnd="@+id/gift1Send"
         motion:duration="1500" >
-        <OnClick motion:targetId="@+id/gift1"
-            motion:clickAction="transitionToEnd"/>
         <KeyFrameSet >
             <KeyAttribute
                 motion:motionTarget="@id/imageGift1"
@@ -123,12 +105,12 @@
                 android:scaleY="0.3" />
         </KeyFrameSet>
     </Transition>
+
     <Transition
+        android:id="@+id/transition_sendGift2"
         motion:constraintSetStart="@+id/tableOpen"
         motion:constraintSetEnd="@+id/gift2Send"
         motion:duration="1500" >
-        <OnClick motion:targetId="@id/gift2"
-            motion:clickAction="transitionToEnd" />
         <KeyFrameSet >
             <KeyAttribute
                 motion:motionTarget="@id/imageGift2"
@@ -206,15 +188,16 @@
                 android:scaleY="0.3" />
         </KeyFrameSet>
     </Transition>
+
     <Transition
         motion:constraintSetStart="@+id/gift1Send"
         motion:constraintSetEnd="@+id/tableOpen"
         motion:autoTransition="jumpToEnd" />
+
     <Transition
         motion:constraintSetStart="@+id/gift2Send"
         motion:constraintSetEnd="@+id/tableOpen"
         motion:autoTransition="jumpToEnd" />
-
 
     <ConstraintSet android:id="@+id/start">
         <Constraint
@@ -225,6 +208,14 @@
             android:alpha="0"
             motion:layout_constraintEnd_toStartOf="@id/btnGift"
             motion:layout_constraintBottom_toBottomOf="parent" />
+        <Constraint
+            android:layout_height="265dp"
+            android:layout_width="409dp"
+            motion:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="44dp"
+            android:layout_marginStart="44dp"
+            android:id="@+id/recyclerView"
+            motion:layout_constraintBottom_toTopOf="@+id/edit_comment" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/tableOpen">
@@ -246,6 +237,14 @@
             motion:layout_constraintTop_toTopOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="4dp" />
+        <Constraint
+            android:id="@+id/imageGift2"
+            motion:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="10dp"
+            android:alpha="0" />
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/gift2Send">
@@ -256,8 +255,20 @@
             motion:layout_constraintTop_toTopOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="4dp" />
+        <Constraint
+            android:id="@+id/imageGift1"
+            motion:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="10dp"
+            android:alpha="0" />
+        <Constraint
+            motion:layout_editor_absoluteY="376dp"
+            android:layout_height="265dp"
+            android:layout_width="409dp"
+            motion:layout_constraintStart_toStartOf="parent"
+            android:id="@+id/recyclerView" />
     </ConstraintSet>
-
-
 
 </MotionScene>
