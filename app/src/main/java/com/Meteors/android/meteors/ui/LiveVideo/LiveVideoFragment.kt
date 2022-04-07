@@ -1,26 +1,32 @@
 package com.Meteors.android.meteors.ui.LiveVideo
 
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
-import android.os.Build
-import android.os.Bundle
+import android.os.*
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.Meteors.android.meteors.MainApplication
 import com.Meteors.android.meteors.R
 import com.Meteors.android.meteors.databinding.FragmentLiveBinding
 import com.Meteors.android.meteors.logic.model.Comment
 import com.Meteors.android.meteors.logic.model.VideoResponse
+import java.lang.IllegalStateException
+import java.sql.Time
+import java.util.*
 
 private const val TAG = "Meteors_Live_Fragment"
 private const val VIDEO_ID = "video_id"
 private const val OWNER_ID = "owner_id"
 private const val OWNER_NAME = "owner_name"
 private const val VIDEO_TEXT = "video_adText"
+private const val MESSAGE_UPDATE = 0
 
 /**
  * @Description:  直播界面的Fragment，可以进行礼物的赠送
@@ -28,7 +34,7 @@ private const val VIDEO_TEXT = "video_adText"
 class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.TransitionListener {
 
     /**
-     * @Description: 为该Fragment提供构造方法，传入视频播放所需要的关键信息
+     * @Description: 为该Fragment提供构造方法，将视频播放所需要的关键信息附加到argument上
      * @Param: VideoResponse
      * @return:  LiveVideoFragment
      */
@@ -46,17 +52,21 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
         }
     }
 
+    private val viewModel by lazy { ViewModelProvider(this).get(LiveFragmentViewModel::class.java) }
+
     private var _binding: FragmentLiveBinding? = null
 
     private val binding get() = _binding!!
+
+    private val comments get() = viewModel.comments
 
     private lateinit var video: VideoResponse
 
     private lateinit var player: MediaPlayer
 
-    private val comments = ArrayList<Comment>()
-
     private lateinit var commentAdapter: LiveCommentAdapter
+
+    private var latestClickTime: Long = 0
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
@@ -65,6 +75,7 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentLiveBinding.inflate(inflater, container, false)
+        setHasOptionsMenu(true)
 
         video = VideoResponse(
             arguments?.get(VIDEO_ID).toString(),
@@ -73,18 +84,17 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
             arguments?.get(VIDEO_TEXT).toString()
         )
 
-        initMediaPlayer()       //初始化MediaPlayer
+        //初始化MediaPlayer
+        initMediaPlayer()
 
-        comments.add(Comment("user_3", "马牛逼", "马牛逼祝您666"))
-        comments.add(Comment("user_default", "范嘉行范佳兴范佳兴范佳兴范佳兴", "牛啊牛啊"))
-        comments.add(Comment("user_2", "范嘉行范佳兴范佳兴范佳兴范佳兴", "好啊好啊好啊好啊好啊好啊好啊好啊好啊好啊好啊好啊好啊好啊好啊"))
-
-        commentAdapter = LiveCommentAdapter(comments)
+        //初始化RecyclerView
+        commentAdapter = LiveCommentAdapter(viewModel.comments)
         binding.recyclerViewComment.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = commentAdapter
         }
 
+        //监听SurfaceView
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             @RequiresApi(Build.VERSION_CODES.R)
             override fun surfaceCreated(holder: SurfaceHolder) {
@@ -103,45 +113,80 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {}
         })
+
         return binding.root
     }
 
     override fun onStart() {
         super.onStart()
+        //添加事件监听
         binding.btnGift.setOnClickListener(this)
         binding.btnGift1.setOnClickListener(this)
         binding.btnGift2.setOnClickListener(this)
         binding.btnPack.setOnClickListener(this)
         binding.fragmentLive.setOnClickListener(this)
         binding.root.setTransitionListener(this)
+        //监听Switch，更改评论区的可见性
         binding.switchBullet.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
-                Log.d("test", "bullet switch on")
                 //显示评论区
                 binding.recyclerViewComment.visibility = View.VISIBLE
                 binding.editComment.visibility = View.VISIBLE
             } else {
-                Log.d("test", "bullet switch off")
                 //关闭评论区
                 binding.recyclerViewComment.visibility = View.INVISIBLE
                 binding.editComment.visibility = View.INVISIBLE
             }
         }
+        //监听软键盘的回车发送，更新评论内容至RecyclerView
         binding.editComment.setOnEditorActionListener { v, actionId, event ->
-            if(actionId == EditorInfo.IME_ACTION_SEND){
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
                 val editContent = binding.editComment.text.toString()
-                if(editContent != ""){
-                    synchronized(comments){
-                        comments.add(Comment(MainApplication.myId, MainApplication.myName, editContent))
+                if (editContent != "") {
+                    synchronized(comments) {
+                        viewModel.comments.add(
+                            Comment(
+                                MainApplication.myId,
+                                MainApplication.myName,
+                                editContent
+                            )
+                        )
                         commentAdapter.notifyItemInserted(comments.size - 1)
                         binding.recyclerViewComment.smoothScrollToPosition(comments.size - 1)
                     }
                 }
                 binding.editComment.text.clear()
-                true
             }
-            false
+            true
         }
+        //初始化CommentLoader， 开始加载评论
+        initCommentLoader()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun initCommentLoader() {
+        val updateHandler = object : Handler(Looper.getMainLooper()) {
+            override fun handleMessage(msg: Message) {
+                if (msg.what == MESSAGE_UPDATE) {
+                    Log.d("test", "handle main, size = ${comments.size}")
+                    viewModel.updateSignal.value = viewModel.updateSignal.value
+                }
+            }
+        }
+        viewModel.initCommentLoader(updateHandler)
+        viewModel.updateSignal.observe(viewLifecycleOwner, Observer {
+            synchronized(comments) {
+                if (comments.size > 40) {
+                    val temp = comments.drop(20)
+                    comments.clear()
+                    comments.addAll(temp)
+                    commentAdapter.notifyDataSetChanged()
+                } else {
+                    commentAdapter.notifyItemInserted(comments.size)
+                }
+                binding.recyclerViewComment.smoothScrollToPosition(comments.size)     //待优化
+            }
+        })
     }
 
     override fun onPause() {
@@ -159,8 +204,14 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
         _binding = null
     }
 
+    /**
+     * @Description: 根据Argument中传入的视频信息，加载MediaPlayer，并进行配置
+     */
     @RequiresApi(Build.VERSION_CODES.R)
     private fun initMediaPlayer() {
+        if (video.uri.toString() == "") {
+            throw IllegalStateException("为传入Fragment视频参数")
+        }
         player = MediaPlayer()
         val fd = requireContext().assets.openFd("${video.id}.mp4")
         player.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length)
@@ -179,29 +230,33 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.btnGift -> {
-                Log.d("test", "click btnFGift")
                 binding.root.setTransition(R.id.transition_openGiftTable)
                 binding.root.transitionToEnd()
             }
             R.id.btn_gift1 -> {
-                Log.d("test", "click btnFGift1")
                 binding.root.setTransition(R.id.transition_sendGift1)
                 binding.root.transitionToEnd()
             }
             R.id.btn_gift2 -> {
-                Log.d("test", "click btnFGift2")
                 binding.root.setTransition(R.id.transition_sendGift2)
                 binding.root.transitionToEnd()
             }
             R.id.btn_pack -> {
-                Log.d("test", "click btnFPack")
                 binding.root.setTransition(R.id.transition_closeGiftTable)
                 binding.root.transitionToEnd()
             }
             else -> {
-                Log.d("test", "click otherWhere")
+                val currentTime = System.currentTimeMillis()
+                if(currentTime - latestClickTime <= 400){
+                    showPrise()
+                }
+                latestClickTime = currentTime
             }
         }
+    }
+
+    private fun showPrise() {
+        Log.d("test", "showPraise")
     }
 
     override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
@@ -228,6 +283,30 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
         progress: Float
     ) {
 
+    }
+
+    /**
+     * @Description: 重新加载Toolbar
+     */
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        menu.clear()
+        inflater.inflate(R.menu.menu_live, menu)
+    }
+
+    /**
+     * @Description: 处理Menu点击事件
+     */
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.menu_item_quitThread) {
+            if (item.title.toString() == getString(R.string.menu_item_stop_comment_loading)) {
+                viewModel.stopLoading()
+                item.setTitle(R.string.menu_item_start_comment_loading)
+            } else {
+                viewModel.startLoading()
+                item.setTitle(R.string.menu_item_stop_comment_loading)
+            }
+        }
+        return true
     }
 
 }

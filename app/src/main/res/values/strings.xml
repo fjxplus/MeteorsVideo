@@ -12,4 +12,6 @@
     <string name="bullet_hint">发条弹幕呗！</string>
     <string name="bullet">公屏</string>
     <string name="colon">:</string>
+    <string name="menu_item_stop_comment_loading">停止CommentLoader</string>
+    <string name="menu_item_start_comment_loading">开始CommentLoading</string>
 </resources>
