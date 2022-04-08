@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import androidx.annotation.RequiresApi
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -17,9 +16,8 @@ import com.Meteors.android.meteors.R
 import com.Meteors.android.meteors.databinding.FragmentLiveBinding
 import com.Meteors.android.meteors.logic.model.Comment
 import com.Meteors.android.meteors.logic.model.VideoResponse
+import com.Meteors.android.meteors.ui.PraiseController
 import java.lang.IllegalStateException
-import java.sql.Time
-import java.util.*
 
 private const val TAG = "Meteors_Live_Fragment"
 private const val VIDEO_ID = "video_id"
@@ -31,7 +29,7 @@ private const val MESSAGE_UPDATE = 0
 /**
  * @Description:  直播界面的Fragment，可以进行礼物的赠送
  */
-class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.TransitionListener {
+class LiveVideoFragment : Fragment(), View.OnClickListener {
 
     /**
      * @Description: 为该Fragment提供构造方法，将视频播放所需要的关键信息附加到argument上
@@ -60,13 +58,15 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
 
     private val comments get() = viewModel.comments
 
-    private lateinit var video: VideoResponse
+    private lateinit var video: VideoResponse       //视频信息，由argument中获得
 
-    private lateinit var player: MediaPlayer
+    private lateinit var player: MediaPlayer        //视频播放器
 
-    private lateinit var commentAdapter: LiveCommentAdapter
+    private lateinit var commentAdapter: LiveCommentAdapter     //公屏的Adapter
 
-    private var latestClickTime: Long = 0
+    private lateinit var praiseController: PraiseController     //连续点击屏幕点赞的触发器
+
+    private var latestClickTime: Long = 0       //记录上次点击屏幕空闲区域的时间
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
@@ -114,6 +114,8 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
             override fun surfaceDestroyed(holder: SurfaceHolder) {}
         })
 
+        praiseController = PraiseController(requireContext(), binding.root)     //实例化点赞控制器
+
         return binding.root
     }
 
@@ -121,11 +123,11 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
         super.onStart()
         //添加事件监听
         binding.btnGift.setOnClickListener(this)
-        binding.btnGift1.setOnClickListener(this)
-        binding.btnGift2.setOnClickListener(this)
-        binding.btnPack.setOnClickListener(this)
         binding.fragmentLive.setOnClickListener(this)
-        binding.root.setTransitionListener(this)
+        //binding.btnGift1.setOnClickListener(this)
+        //binding.btnGift2.setOnClickListener(this)
+        //binding.btnPack.setOnClickListener(this)
+        //binding.root.setTransitionListener(this)
         //监听Switch，更改评论区的可见性
         binding.switchBullet.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
@@ -229,10 +231,11 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
 
     override fun onClick(v: View?) {
         when (v?.id) {
+
             R.id.btnGift -> {
-                binding.root.setTransition(R.id.transition_openGiftTable)
-                binding.root.transitionToEnd()
+                //弹出礼物框
             }
+            /*
             R.id.btn_gift1 -> {
                 binding.root.setTransition(R.id.transition_sendGift1)
                 binding.root.transitionToEnd()
@@ -245,44 +248,16 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MotionLayout.Transit
                 binding.root.setTransition(R.id.transition_closeGiftTable)
                 binding.root.transitionToEnd()
             }
+             */
             else -> {
                 val currentTime = System.currentTimeMillis()
-                if(currentTime - latestClickTime <= 400){
-                    showPrise()
+                if (currentTime - latestClickTime <= 400) {
+                    Log.d("test", "x = ${binding.btnGift.x}, y = ${binding.btnGift.y}")
+                    praiseController.showPraise(binding.btnGift.x, binding.btnGift.y)
                 }
                 latestClickTime = currentTime
             }
         }
-    }
-
-    private fun showPrise() {
-        Log.d("test", "showPraise")
-    }
-
-    override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
-
-    }
-
-    override fun onTransitionChange(
-        motionLayout: MotionLayout?,
-        startId: Int,
-        endId: Int,
-        progress: Float
-    ) {
-
-    }
-
-    override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-
-    }
-
-    override fun onTransitionTrigger(
-        motionLayout: MotionLayout?,
-        triggerId: Int,
-        positive: Boolean,
-        progress: Float
-    ) {
-
     }
 
     /**
