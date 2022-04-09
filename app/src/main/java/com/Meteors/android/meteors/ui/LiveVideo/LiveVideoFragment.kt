@@ -56,6 +56,10 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
 
     private val binding get() = _binding!!
 
+    private var width: Int = 1080       //屏幕宽度
+
+    private var height: Int = 1920      //屏幕高度
+
     private val comments get() = viewModel.comments
 
     private lateinit var video: VideoResponse       //视频信息，由argument中获得
@@ -68,6 +72,13 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
 
     private var latestClickTime: Long = 0       //记录上次点击屏幕空闲区域的时间
 
+    //管理礼物的公屏展示
+    private val giftManager: GiftManager by lazy {
+        val endY = binding.containerComment.y.toInt()
+        val startY = binding.containerComment.y.toInt() - 3 * 250
+        GiftManager(requireContext(), binding.root, 3, width, startY, endY)
+    }
+
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -77,6 +88,11 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         _binding = FragmentLiveBinding.inflate(inflater, container, false)
         setHasOptionsMenu(true)
 
+        //获取屏幕参数
+        width = activity?.windowManager?.currentWindowMetrics?.bounds?.width() ?: width
+        height = activity?.windowManager?.currentWindowMetrics?.bounds?.height() ?: height
+
+        //从argument中取出视频信息
         video = VideoResponse(
             arguments?.get(VIDEO_ID).toString(),
             arguments?.get(OWNER_ID).toString(),
@@ -124,10 +140,8 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         //添加事件监听
         binding.btnGift.setOnClickListener(this)
         binding.fragmentLive.setOnClickListener(this)
-        //binding.btnGift1.setOnClickListener(this)
-        //binding.btnGift2.setOnClickListener(this)
-        //binding.btnPack.setOnClickListener(this)
-        //binding.root.setTransitionListener(this)
+        binding.btnSendGiftOnce.setOnClickListener(this)
+        binding.btnSendGiftDouble.setOnClickListener(this)
         //监听Switch，更改评论区的可见性
         binding.switchBullet.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
@@ -235,24 +249,17 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
             R.id.btnGift -> {
                 //弹出礼物框
             }
-            /*
-            R.id.btn_gift1 -> {
-                binding.root.setTransition(R.id.transition_sendGift1)
-                binding.root.transitionToEnd()
+            R.id.btn_sendGiftOnce -> {
+                //模拟礼物单击
+                giftManager.showGiftOnce()
             }
-            R.id.btn_gift2 -> {
-                binding.root.setTransition(R.id.transition_sendGift2)
-                binding.root.transitionToEnd()
+            R.id.btn_sendGiftDouble -> {
+                //模拟礼物连击
+                giftManager.showGiftDouble()
             }
-            R.id.btn_pack -> {
-                binding.root.setTransition(R.id.transition_closeGiftTable)
-                binding.root.transitionToEnd()
-            }
-             */
             else -> {
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - latestClickTime <= 400) {
-                    Log.d("test", "x = ${binding.btnGift.x}, y = ${binding.btnGift.y}")
                     praiseController.showPraise(binding.btnGift.x, binding.btnGift.y)
                 }
                 latestClickTime = currentTime

@@ -8,6 +8,7 @@ import android.widget.ImageView
 import androidx.core.util.Pools
 import com.Meteors.android.meteors.R
 import java.lang.IllegalStateException
+import kotlin.random.Random
 
 class PraiseController(private val context: Context, val viewGroup: ViewGroup) {
 
@@ -56,8 +57,12 @@ class PraiseController(private val context: Context, val viewGroup: ViewGroup) {
         if (praiseView == null) {       //如果常量池返回为null，则创建新的实例
             praiseView = PraiseView(context)
             praiseView.layoutParams = ViewGroup.LayoutParams(160, 160)
-            praiseView.setImageResource(R.drawable.ic_action_praise)
             praiseView.scaleType = ImageView.ScaleType.FIT_XY
+        }
+        when (Random.nextInt(0, 10)) {
+            in 0..2 -> praiseView.setImageResource(R.drawable.ic_action_praise_random1)
+            in 3..5 -> praiseView.setImageResource(R.drawable.ic_action_praise_random2)
+            else -> praiseView.setImageResource(R.drawable.ic_action_praise)
         }
         praiseView.x = x
         praiseView.y = y
