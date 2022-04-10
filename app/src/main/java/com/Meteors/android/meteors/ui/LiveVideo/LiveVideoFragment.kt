@@ -1,6 +1,7 @@
 package com.Meteors.android.meteors.ui.LiveVideo
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.media.MediaPlayer
 import android.os.*
 import android.util.Log
@@ -13,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.Meteors.android.meteors.MainApplication
 import com.Meteors.android.meteors.R
+import com.Meteors.android.meteors.databinding.DialogGiftLayoutBinding
 import com.Meteors.android.meteors.databinding.FragmentLiveBinding
 import com.Meteors.android.meteors.logic.model.Comment
 import com.Meteors.android.meteors.logic.model.VideoResponse
@@ -72,11 +74,23 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
 
     private var latestClickTime: Long = 0       //记录上次点击屏幕空闲区域的时间
 
+    private lateinit var dialogBinding: DialogGiftLayoutBinding         //礼物中心的布局
+
+    private lateinit var giftDialog: Dialog         //礼物中心的Dialog
+
     //管理礼物的公屏展示
     private val giftManager: GiftManager by lazy {
         val endY = binding.containerComment.y.toInt()
         val startY = binding.containerComment.y.toInt() - 3 * 250
-        GiftManager(requireContext(), binding.root, 3, width, startY, endY)
+        GiftManager(requireContext(), binding.root, 3, width, startY, endY).apply {
+            setCountDownTick = {time ->
+                dialogBinding.btnSendGift.text = "$time"        //回调更新按钮倒计时
+            }
+            endSendCallback = {
+                dialogBinding.btnSendGift.setText(R.string.btn_send)        //重置按钮text为“发送”
+                giftDialog.dismiss()        //隐藏Dialog
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -132,6 +146,8 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
 
         praiseController = PraiseController(requireContext(), binding.root)     //实例化点赞控制器
 
+        initGiftDialog()        //实例化dialogBinding和GiftDialog，构建礼物中心
+
         return binding.root
     }
 
@@ -140,8 +156,9 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         //添加事件监听
         binding.btnGift.setOnClickListener(this)
         binding.fragmentLive.setOnClickListener(this)
-        binding.btnSendGiftOnce.setOnClickListener(this)
-        binding.btnSendGiftDouble.setOnClickListener(this)
+        //礼物中心的事件监听
+        dialogBinding.btnSendGift.setOnClickListener(this)
+        dialogBinding.radioSendOnce.isChecked = true
         //监听Switch，更改评论区的可见性
         binding.switchBullet.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
@@ -205,19 +222,22 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         })
     }
 
-    override fun onPause() {
-        super.onPause()
-        player.pause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        player.start()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    /**
+    * @Description: 构建礼物中心的Dialog
+    */
+    private fun initGiftDialog() {
+        dialogBinding = DialogGiftLayoutBinding.inflate(layoutInflater)
+        giftDialog = Dialog(requireContext())
+        giftDialog.setTitle("礼物中心")
+        giftDialog.setContentView(dialogBinding.root)
+        val dialogWindow = giftDialog.window
+        val layoutParams = dialogWindow?.attributes?.apply {
+            width = ViewGroup.LayoutParams.MATCH_PARENT
+            height = ViewGroup.LayoutParams.WRAP_CONTENT
+            gravity = Gravity.BOTTOM
+        }
+        dialogWindow?.setDimAmount(0f)      //取消背景变灰
+        dialogWindow?.attributes = layoutParams
     }
 
     /**
@@ -246,23 +266,27 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
 
+            //右下角礼物中心按钮
             R.id.btnGift -> {
-                //弹出礼物框
+                giftDialog.show()       //展开礼物中心
+                dialogBinding.radioSendOnce.isChecked = true
             }
-            R.id.btn_sendGiftOnce -> {
-                //模拟礼物单击
-                giftManager.showGiftOnce()
+            //发送礼物按钮
+            R.id.btn_sendGift -> {
+                if (dialogBinding.radioSendOnce.isChecked){     //单击模式被选中
+                    giftManager.showGiftOnce()
+                    giftDialog.dismiss()
+                } else if (dialogBinding.radioSendDouble.isChecked){        //连击模式被选中
+                    giftManager.showGiftDouble()
+                }
             }
-            R.id.btn_sendGiftDouble -> {
-                //模拟礼物连击
-                giftManager.showGiftDouble()
-            }
+            //屏幕其他区域
             else -> {
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - latestClickTime <= 400) {
+                val currentTime = System.currentTimeMillis()        //获取当前时间
+                if (currentTime - latestClickTime <= 400) {     //连击屏幕其他区域展示出点赞动画，最大间隔为400ms
                     praiseController.showPraise(binding.btnGift.x, binding.btnGift.y)
                 }
-                latestClickTime = currentTime
+                latestClickTime = currentTime       //更新最近一次的屏幕点击时间
             }
         }
     }
@@ -291,4 +315,18 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         return true
     }
 
+    override fun onPause() {
+        super.onPause()
+        player.pause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        player.start()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

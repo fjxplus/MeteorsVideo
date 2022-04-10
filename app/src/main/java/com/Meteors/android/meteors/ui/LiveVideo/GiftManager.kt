@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.animation.AnticipateInterpolator
 import android.view.animation.OvershootInterpolator
 import com.Meteors.android.meteors.databinding.GiftAnimationLayoutBinding
+import kotlin.math.round
 
 /**
  * @Description: 管理礼物赠送动画的执行，对礼物单击和连击进行处理
@@ -25,6 +26,10 @@ class GiftManager(
     startY: Int = 0,
     endY: Int
 ) {
+
+    lateinit var setCountDownTick: (millisUntilFinished: Int) -> Unit       //回调返回倒计时
+
+    lateinit var endSendCallback: () -> Unit        //连击结束回调
 
     //每个礼物动画View的高度， 用于初始化View
     private val giftHeight = (endY - startY) / size
@@ -74,7 +79,6 @@ class GiftManager(
             override fun onAnimationRepeat(animation: Animator?) {}
 
             override fun onAnimationEnd(animation: Animator?) {
-                Log.d("test1", "animation end")
                 sign[i] = 1     //动画结束后标志位重置1
             }
         })
@@ -91,14 +95,20 @@ class GiftManager(
     private val countDownTimer = object : CountDownTimer(3000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
             //回调，更新连击按钮的数字
-            Log.d("test1", "onTick(), millisUntilFinished = $millisUntilFinished")
+            if (!this@GiftManager::setCountDownTick.isInitialized || !this@GiftManager::endSendCallback.isInitialized) {
+                throw IllegalStateException("未在Fragment/Activity中实例化回调属性setCountDownTick: () -> Unit 或 endSendCallback: () -> Unit")
+            }
+            setCountDownTick(round(millisUntilFinished / 1000.0).toInt())
         }
 
         override fun onFinish() {
-            endAnimator[doubleIndex!!].start()      //播放结束动画， 收起View
-            sign[doubleIndex!!] = 1         //标志位重置为1
-            doubleIndex = null      //当前连击动画的索引置null
-            doubleTimes = 0         //连击次数置0
+            if (doubleIndex != null) {
+                endAnimator[doubleIndex!!].start()      //播放结束动画， 收起View
+                endSendCallback()
+                sign[doubleIndex!!] = 1         //标志位重置为1
+                doubleIndex = null      //当前连击动画的索引置null
+                doubleTimes = 0         //连击次数置0
+            }
         }
 
     }

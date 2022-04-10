@@ -14,4 +14,7 @@
     <string name="colon">:</string>
     <string name="menu_item_stop_comment_loading">停止CommentLoader</string>
     <string name="menu_item_start_comment_loading">开始CommentLoading</string>
+    <string name="radio_send_once">单击</string>
+    <string name="radio_send_double">连击</string>
+    <string name="btn_send">发送</string>
 </resources>
