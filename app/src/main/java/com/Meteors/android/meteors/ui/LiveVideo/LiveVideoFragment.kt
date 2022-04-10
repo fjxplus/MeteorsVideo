@@ -7,6 +7,7 @@ import android.os.*
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
+import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -78,16 +79,19 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
 
     private lateinit var giftDialog: Dialog         //礼物中心的Dialog
 
+    private var curSelectGift = 0       //默认当前选取的礼物为第1个
+
+    private lateinit var giftViewList: List<ImageButton>        //保存礼物按钮的数组
+
     //管理礼物的公屏展示
     private val giftManager: GiftManager by lazy {
         val endY = binding.containerComment.y.toInt()
         val startY = binding.containerComment.y.toInt() - 3 * 250
         GiftManager(requireContext(), binding.root, 3, width, startY, endY).apply {
-            setCountDownTick = {time ->
+            setCountDownTick = { time ->
                 dialogBinding.btnSendGift.text = "$time"        //回调更新按钮倒计时
             }
             endSendCallback = {
-                dialogBinding.btnSendGift.setText(R.string.btn_send)        //重置按钮text为“发送”
                 giftDialog.dismiss()        //隐藏Dialog
             }
         }
@@ -159,6 +163,9 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         //礼物中心的事件监听
         dialogBinding.btnSendGift.setOnClickListener(this)
         dialogBinding.radioSendOnce.isChecked = true
+        for(view in giftViewList){
+            view.setOnClickListener(this)
+        }
         //监听Switch，更改评论区的可见性
         binding.switchBullet.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
@@ -201,32 +208,41 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         val updateHandler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 if (msg.what == MESSAGE_UPDATE) {
-                    Log.d("test", "handle main, size = ${comments.size}")
                     viewModel.updateSignal.value = viewModel.updateSignal.value
                 }
             }
         }
-        viewModel.initCommentLoader(updateHandler)
+        viewModel.initCommentLoader(updateHandler)      //初始化评论加载器
         viewModel.updateSignal.observe(viewLifecycleOwner, Observer {
             synchronized(comments) {
-                if (comments.size > 40) {
+                if (comments.size > 40) {       //评论数大于40，进行数组瘦身
                     val temp = comments.drop(20)
                     comments.clear()
                     comments.addAll(temp)
-                    commentAdapter.notifyDataSetChanged()
+                    commentAdapter.notifyDataSetChanged()       //更新视图
                 } else {
                     commentAdapter.notifyItemInserted(comments.size)
                 }
-                binding.recyclerViewComment.smoothScrollToPosition(comments.size)     //待优化
+                binding.recyclerViewComment.smoothScrollToPosition(comments.size)     //滑动
             }
         })
     }
 
     /**
-    * @Description: 构建礼物中心的Dialog
-    */
+     * @Description: 构建礼物中心的Dialog
+     */
     private fun initGiftDialog() {
         dialogBinding = DialogGiftLayoutBinding.inflate(layoutInflater)
+        giftViewList = listOf(
+            dialogBinding.btnGift1,
+            dialogBinding.btnGift2,
+            dialogBinding.btnGift3,
+            dialogBinding.btnGift4,
+            dialogBinding.btnGift5,
+            dialogBinding.btnGift6,
+            dialogBinding.btnGift7,
+            dialogBinding.btnGift8,
+        )
         giftDialog = Dialog(requireContext())
         giftDialog.setTitle("礼物中心")
         giftDialog.setContentView(dialogBinding.root)
@@ -238,6 +254,12 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         }
         dialogWindow?.setDimAmount(0f)      //取消背景变灰
         dialogWindow?.attributes = layoutParams
+        giftDialog.setOnDismissListener {
+            setGiftSelectState(0)       //重置为默认选中第一个礼物
+            dialogBinding.radioSendOnce.isChecked = true        //重置为礼物单击模式
+            dialogBinding.btnSendGift.setText(R.string.btn_send)        //重置按钮text为“发送”
+        }
+        dialogBinding.btnGift1.setBackgroundResource(android.R.color.darker_gray)       //默认选中第一个礼物
     }
 
     /**
@@ -269,18 +291,41 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
             //右下角礼物中心按钮
             R.id.btnGift -> {
                 giftDialog.show()       //展开礼物中心
-                dialogBinding.radioSendOnce.isChecked = true
             }
             //发送礼物按钮
             R.id.btn_sendGift -> {
-                if (dialogBinding.radioSendOnce.isChecked){     //单击模式被选中
-                    giftManager.showGiftOnce()
+                if (dialogBinding.radioSendOnce.isChecked) {     //单击模式被选中
+                    giftManager.showGiftOnce(MainApplication.myName, curSelectGift)
                     giftDialog.dismiss()
-                } else if (dialogBinding.radioSendDouble.isChecked){        //连击模式被选中
-                    giftManager.showGiftDouble()
+                } else if (dialogBinding.radioSendDouble.isChecked) {        //连击模式被选中
+                    giftManager.showGiftDouble(MainApplication.myName, curSelectGift)
                 }
             }
-            //屏幕其他区域
+            R.id.btn_gift1 -> {
+                setGiftSelectState(0)       //点击第一个礼物
+            }
+            R.id.btn_gift2 -> {
+                setGiftSelectState(1)       //点击第二个礼物
+            }
+            R.id.btn_gift3 -> {
+                setGiftSelectState(2)       //以此类推
+            }
+            R.id.btn_gift4 -> {
+                setGiftSelectState(3)
+            }
+            R.id.btn_gift5 -> {
+                setGiftSelectState(4)
+            }
+            R.id.btn_gift6 -> {
+                setGiftSelectState(5)
+            }
+            R.id.btn_gift7 -> {
+                setGiftSelectState(6)
+            }
+            R.id.btn_gift8 -> {
+                setGiftSelectState(7)
+            }
+            //屏幕其他区域, 双击点赞
             else -> {
                 val currentTime = System.currentTimeMillis()        //获取当前时间
                 if (currentTime - latestClickTime <= 400) {     //连击屏幕其他区域展示出点赞动画，最大间隔为400ms
@@ -288,6 +333,18 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
                 }
                 latestClickTime = currentTime       //更新最近一次的屏幕点击时间
             }
+        }
+    }
+
+    /**
+    * @Description: 被选中的礼物背景会发生变化，上一次被选中的礼物背景还原，更新当前存储的被选中礼物下标
+    * @Param: giftIndex新选中的礼物下标
+    */
+    private fun setGiftSelectState(giftIndex: Int) {
+        if (curSelectGift != giftIndex){
+            giftViewList[curSelectGift].setBackgroundResource(android.R.color.transparent)
+            giftViewList[giftIndex].setBackgroundResource(android.R.color.darker_gray)
+            curSelectGift = giftIndex
         }
     }
 
@@ -305,10 +362,10 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_item_quitThread) {
             if (item.title.toString() == getString(R.string.menu_item_stop_comment_loading)) {
-                viewModel.stopLoading()
+                viewModel.stopLoading()     //停止加载评论
                 item.setTitle(R.string.menu_item_start_comment_loading)
             } else {
-                viewModel.startLoading()
+                viewModel.startLoading()    //开始加载评论
                 item.setTitle(R.string.menu_item_stop_comment_loading)
             }
         }

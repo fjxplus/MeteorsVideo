@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                         // 添加推荐界面的Fragment
                         val fragment = LiveVideoFragment.newInstance(
                             VideoResponse(
-                                "VID_2",
+                                "VID_live",
                                 "FanJiaxing",
                                 "兴小范",
                                 "双11大促"

@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AnticipateInterpolator
 import android.view.animation.OvershootInterpolator
+import com.Meteors.android.meteors.R
 import com.Meteors.android.meteors.databinding.GiftAnimationLayoutBinding
 import kotlin.math.round
 
@@ -116,11 +117,13 @@ class GiftManager(
     /**
      * @Description: 开启礼物单击动画
      */
-    fun showGiftOnce() {
+    fun showGiftOnce(userName: String, giftType: Int) {
         val viewIndex = getGiftShowView()
         if (viewIndex != null) {
             //设置数据
             val itemBinding = giftContainer[viewIndex]
+            itemBinding.textUserId.text = userName
+            itemBinding.imageGift.setImageResource(giftId[giftType])
             itemBinding.textGiftCount.text = ""
             onceAnimatorSet[viewIndex].start()
         }
@@ -130,7 +133,7 @@ class GiftManager(
      * @Description: 开启礼物动画，记录点击次数，取消计时器重新计时
      */
     @SuppressLint("SetTextI18n")
-    fun showGiftDouble() {
+    fun showGiftDouble(userName: String, giftType: Int) {
         doubleTimes++
         if (doubleIndex == null) {        //还没申请到展示动画的View
             doubleIndex = getGiftShowView()     //申请
@@ -145,6 +148,8 @@ class GiftManager(
             countDownTimer.cancel()
             //更新数据
             val itemBinding = giftContainer[doubleIndex!!]
+            itemBinding.textUserId.text = userName
+            itemBinding.imageGift.setImageResource(giftId[giftType])
             itemBinding.textGiftCount.text = "X$doubleTimes"
             //重新开始定时
             countDownTimer.start()
@@ -164,12 +169,26 @@ class GiftManager(
      * @return:  空闲View在数组中的下标， 没有空闲的化返回null
      */
     private fun getGiftShowView(): Int? {
-        for (i in 0 until size) {
+        for (i in size - 1 downTo 0) {
             if (sign[i] == 1) {
                 sign[i] = 0     //对取到的View的标志位置0
                 return i
             }
         }
         return null
+    }
+
+    companion object {
+
+        private val giftId = listOf(
+            R.drawable.ic_gift1,
+            R.drawable.ic_gift2,
+            R.drawable.ic_gift3,
+            R.drawable.ic_gift4,
+            R.drawable.ic_gift5,
+            R.drawable.ic_gift6,
+            R.drawable.ic_gift7,
+            R.drawable.ic_gift8
+        )
     }
 }
