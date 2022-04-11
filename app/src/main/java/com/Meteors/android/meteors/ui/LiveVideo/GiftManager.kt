@@ -6,7 +6,6 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.CountDownTimer
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AnticipateInterpolator
@@ -58,6 +57,17 @@ class GiftManager(
             ObjectAnimator.ofFloat(giftContainer[i].root, "x", 0f)
         animatorStart.interpolator = object : OvershootInterpolator() {}
         animatorStart
+    })
+
+    //连击时的字体放大动画
+    private val textScaleAnimator = Array<AnimatorSet>(size, init = {i ->
+        val animatorSet = AnimatorSet()
+        val textAnimatorX = ObjectAnimator.ofFloat(giftContainer[i].textGiftCount, "scaleX", 1f, 0.2f, 1.5f, 1f)
+        val textAnimatorY = ObjectAnimator.ofFloat(giftContainer[i].textGiftCount, "scaleY", 1f, 0.2f, 1.5f, 1f)
+        textAnimatorX.duration = 300
+        textAnimatorY.duration = 300
+        animatorSet.play(textAnimatorX).with(textAnimatorY)
+        animatorSet
     })
 
     //公屏展示的结束动画，x坐标设为屏幕左侧
@@ -150,6 +160,7 @@ class GiftManager(
             val itemBinding = giftContainer[doubleIndex!!]
             itemBinding.textUserId.text = userName
             itemBinding.imageGift.setImageResource(giftId[giftType])
+            textScaleAnimator[doubleIndex!!].start()
             itemBinding.textGiftCount.text = "X$doubleTimes"
             //重新开始定时
             countDownTimer.start()

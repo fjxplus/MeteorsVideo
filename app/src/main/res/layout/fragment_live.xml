@@ -57,7 +57,7 @@
             android:imeOptions="actionSend"
             android:maxLines="1"
             android:singleLine="true"
-            android:textColor="@color/white"
+            android:textColor="#FFE57F"
             android:textColorHint="@color/grey_200"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
