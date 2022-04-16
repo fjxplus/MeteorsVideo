@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.Meteors.android.meteors.MainActivity
 import com.Meteors.android.meteors.MainApplication
 import com.Meteors.android.meteors.MediaPlayerPool
 import com.Meteors.android.meteors.R
@@ -28,7 +29,7 @@ private const val TAG = "Meteors_Assets_Fragment"
 /**
  * @Description: 播放assets目录下的视频文件，对应底部导航栏为收藏
  */
-class AssetsVideoFragment : Fragment() {
+class AssetsVideoFragment : Fragment(), MainActivity.PlayerController {
 
     private val viewModel by lazy { ViewModelProvider(this).get(AssetsFragmentViewModel::class.java) }
 
@@ -123,6 +124,14 @@ class AssetsVideoFragment : Fragment() {
                 Toast.makeText(requireContext(), "评论成功！", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun startWorking() {
+        videoAdapter.startWork()
+    }
+
+    override fun stopWorking() {
+        videoAdapter.stopWork()
     }
 
     override fun onPause() {

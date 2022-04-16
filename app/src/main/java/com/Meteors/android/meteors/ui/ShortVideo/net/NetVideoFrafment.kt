@@ -16,6 +16,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.Meteors.android.meteors.MainActivity
 import com.Meteors.android.meteors.MainApplication
 import com.Meteors.android.meteors.MediaPlayerPool
 import com.Meteors.android.meteors.R
@@ -31,7 +32,7 @@ private const val TAG = "Meteors_NetFragment"
 /**
  * @Description: 播放服务器的视频，对应底部导航栏为推荐
  */
-class NetVideoFragment : Fragment() {
+class NetVideoFragment : Fragment(), MainActivity.PlayerController {
 
     private val viewModel by lazy { ViewModelProvider(this).get(NetFragmentViewModel::class.java) }
 
@@ -60,7 +61,7 @@ class NetVideoFragment : Fragment() {
         initVideoAdapter()
 
         //向网络层请求数据，并对数据进行监听
-        if (!viewModel.mediaPlayerIsInitialiazed()) {
+        if (!viewModel.mediaPlayerIsInitialized()) {
             viewModel.getVideoList()
         }
         //监听视频列表
@@ -136,6 +137,14 @@ class NetVideoFragment : Fragment() {
                 Toast.makeText(requireContext(), "评论成功！", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun startWorking() {
+        videoAdapter.startWork()
+    }
+
+    override fun stopWorking() {
+        videoAdapter.stopWork()
     }
 
     override fun onPause() {

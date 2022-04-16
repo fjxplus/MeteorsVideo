@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.Meteors.android.meteors.MainActivity
 import com.Meteors.android.meteors.MainApplication
 import com.Meteors.android.meteors.R
 import com.Meteors.android.meteors.databinding.DialogGiftLayoutBinding
@@ -32,7 +33,7 @@ private const val MESSAGE_UPDATE = 0
 /**
  * @Description:  直播界面的Fragment，可以进行礼物的赠送
  */
-class LiveVideoFragment : Fragment(), View.OnClickListener {
+class LiveVideoFragment : Fragment(), View.OnClickListener, MainActivity.PlayerController {
 
     /**
      * @Description: 为该Fragment提供构造方法，将视频播放所需要的关键信息附加到argument上
@@ -82,6 +83,8 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
     private var curSelectGift = 0       //默认当前选取的礼物为第1个
 
     private lateinit var giftViewList: List<ImageButton>        //保存礼物按钮的数组
+
+    private var isWorking = false
 
     //管理礼物的公屏展示
     private val giftManager: GiftManager by lazy {
@@ -134,7 +137,7 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 Log.d(TAG, "surfaceCreated")
                 player.setDisplay(holder)
-                player.start()
+                startPlaying()
             }
 
             override fun surfaceChanged(
@@ -372,6 +375,23 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
         return true
     }
 
+
+    override fun startWorking() {
+        isWorking = true
+        startPlaying()
+    }
+
+    override fun stopWorking() {
+        player.pause()
+        isWorking = false
+    }
+
+    fun startPlaying(){
+        if(this::player.isInitialized && isWorking && !binding.surfaceView.holder.isCreating){
+            player.start()
+        }
+    }
+
     override fun onPause() {
         super.onPause()
         player.pause()
@@ -380,6 +400,11 @@ class LiveVideoFragment : Fragment(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
         player.start()
+    }
+
+    override fun onStop() {
+        stopWorking()
+        super.onStop()
     }
 
     override fun onDestroyView() {

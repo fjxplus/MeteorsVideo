@@ -105,7 +105,6 @@ class PraiseController(private val context: Context, val viewGroup: ViewGroup) {
          * @Description: release接口回收实例，放回数组中
          */
         override fun release(instance: PraiseView): Boolean {
-            Log.d("test1", "mPoolSize = $mPoolSize")
             if (isInPool(instance)) {
                 throw IllegalStateException("The PraiseView instance is already in the pool!")
             }
@@ -128,6 +127,5 @@ class PraiseController(private val context: Context, val viewGroup: ViewGroup) {
             }
             return false
         }
-
     }
 }

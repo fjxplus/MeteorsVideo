@@ -42,6 +42,8 @@ class VideoAdapter(
 
     val mediaPlayerPool: MediaPlayerPool get() = getMediaPlayerPool()
 
+    private var isWorking = false       //当前是否处于可交互状态，是否处于前台
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder {
         val itemBinding =
             VideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -102,6 +104,25 @@ class VideoAdapter(
         }
     }
 
+    /**
+    * @Description: 当前Fragment正在交互， isWorking为true，可以播放视频
+    */
+    fun startWork(){
+        isWorking = true
+        curHolder.startVideo()
+    }
+
+    /**
+    * @Description: 当前Fragment停止交互，暂停播放视频, isWorking设置为false
+    */
+    fun stopWork(){
+        pauseVideo()
+        isWorking = false
+    }
+
+    /**
+    * @Description: 暂停当前界面视频的播放
+    */
     fun pauseVideo() {
         curHolder.pauseVideo()
     }
@@ -167,10 +188,22 @@ class VideoAdapter(
                         Toast.makeText(context, "clicked ad", Toast.LENGTH_SHORT).show()
                     }
                     R.id.btn_pause -> {
-                        pauseVideo()
+                        if (!mediaPlayerPool.isPaused()) {
+                            mediaPlayerPool.pauseVideo()
+                            itemBinding.btnPause.visibility = View.VISIBLE
+                        }else{
+                            mediaPlayerPool.resumeVideo()
+                            itemBinding.btnPause.visibility = View.INVISIBLE
+                        }
                     }
                     else -> {
-                        pauseVideo()
+                        if (!mediaPlayerPool.isPaused()) {
+                            mediaPlayerPool.pauseVideo()
+                            itemBinding.btnPause.visibility = View.VISIBLE
+                        }else{
+                            mediaPlayerPool.resumeVideo()
+                            itemBinding.btnPause.visibility = View.INVISIBLE
+                        }
                     }
                 }
             }
@@ -219,20 +252,26 @@ class VideoAdapter(
          */
         fun startVideo() {
             Log.d(TAG, "Holder-${curPosition} startVideo()")
-            mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
-            itemBinding.btnPause.visibility = View.INVISIBLE
+            if (isWorking){
+                mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
+                itemBinding.btnPause.visibility = View.INVISIBLE
+            }
         }
 
         /**
          * 暂停或继续播放视频
          */
         fun pauseVideo() {
-            if (mediaPlayerPool.isPaused()) {
-                mediaPlayerPool.resumeVideo()
-                itemBinding.btnPause.visibility = View.INVISIBLE
-            } else {
+            if (!mediaPlayerPool.isPaused()) {
                 mediaPlayerPool.pauseVideo()
                 itemBinding.btnPause.visibility = View.VISIBLE
+            }
+        }
+
+        fun resumeVideo(){
+            if (mediaPlayerPool.isPaused()) {
+                mediaPlayerPool.pauseVideo()
+                itemBinding.btnPause.visibility = View.INVISIBLE
             }
         }
 
@@ -242,8 +281,10 @@ class VideoAdapter(
         override fun surfaceCreated(holder: SurfaceHolder) {
             Log.d(TAG, "surfaceCreated")
             isInitialized = true
-            mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
-            itemBinding.btnPause.visibility = View.INVISIBLE
+            if(isWorking){
+                mediaPlayerPool.startVideo(curPosition, holder, isInitialized)
+                itemBinding.btnPause.visibility = View.INVISIBLE
+            }
         }
 
         override fun surfaceChanged(
