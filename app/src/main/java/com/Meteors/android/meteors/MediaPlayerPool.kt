@@ -30,6 +30,7 @@ class MediaPlayerPool(
     private val preCacheCount = 2
     private var player: MediaPlayer? = null
     private var curPosition = -1
+    private var isWorking = false
 
     fun load(position: Int) {
         //创建缓存
@@ -51,6 +52,7 @@ class MediaPlayerPool(
     * @return:  void
     */
     fun startVideo(position: Int, surfaceHolder: SurfaceHolder, holderInitialized: Boolean) {
+        isWorking = true
         if (curPosition != position) {
             player?.pause()
         }
@@ -69,7 +71,9 @@ class MediaPlayerPool(
                 val multiple = windowWidth * 1.0 / player!!.videoWidth   //根据屏幕宽度获取伸缩系数
                 val newHeight = (multiple * player!!.videoHeight).toInt()
                 surfaceHolder.setFixedSize(windowWidth, newHeight)     //为Surface设置新的宽高
-                player!!.start()
+                if(isWorking){
+                    player!!.start()
+                }
                 mLruCache.initMap[position] = true
             }
         } else {
@@ -92,7 +96,7 @@ class MediaPlayerPool(
 
     //开始播放暂停的视频
     fun resumeVideo() {
-        if (mLruCache.initMap.containsKey(curPosition)) {       //判断当前实例player是否已经初始化
+        if (isWorking && mLruCache.initMap.containsKey(curPosition)) {       //判断当前实例player是否已经初始化
             if (!player!!.isPlaying) {
                 player!!.start()
             }
@@ -111,6 +115,10 @@ class MediaPlayerPool(
     fun release(){
         player?.pause()
         mLruCache.evictAll()
+    }
+
+    fun stopWorking(){
+        isWorking = false
     }
 
     fun restart() {

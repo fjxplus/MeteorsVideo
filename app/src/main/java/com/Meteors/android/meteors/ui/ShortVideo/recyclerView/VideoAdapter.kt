@@ -117,6 +117,7 @@ class VideoAdapter(
     */
     fun stopWork(){
         pauseVideo()
+        mediaPlayerPool.stopWorking()
         isWorking = false
     }
 

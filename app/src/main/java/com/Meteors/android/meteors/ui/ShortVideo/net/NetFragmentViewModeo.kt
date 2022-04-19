@@ -27,6 +27,10 @@ class NetFragmentViewModel : ViewModel() {
         Repository.getComments(commentsId.value!!)
     }
 
+    init {
+        getVideoList()
+    }
+
     //初始化mediaPlayerPool，如果未初始化就进行实例化
     fun initMediaPlayerPool(
         context: Context,

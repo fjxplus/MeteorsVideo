@@ -56,7 +56,7 @@ class AssetsVideoFragment : Fragment(), MainActivity.PlayerController {
         //实例化MediaPlayerPool
         val videoList = getVideoList()
 
-        if (!viewModel.mediaPlayerIsInitialiazed()) {
+        if (!viewModel.mediaPlayerIsInitialized()) {
             val windowWidth =
                 requireActivity().windowManager.currentWindowMetrics.bounds.width()     //获取屏幕宽度，用于视频缩放
             viewModel.mediaPlayerPool =
@@ -71,6 +71,11 @@ class AssetsVideoFragment : Fragment(), MainActivity.PlayerController {
         //初始化RecyclerView
         initVideoAdapter(videoList)
 
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         //监听评论数据的返回
         viewModel.comments.observe(viewLifecycleOwner, Observer { result ->
             val commentListResponse = result.getOrNull()
@@ -86,7 +91,6 @@ class AssetsVideoFragment : Fragment(), MainActivity.PlayerController {
 
         binding.imgHint.visibility = View.INVISIBLE
         binding.recyclerView.visibility = View.VISIBLE
-        return binding.root
     }
 
     override fun onStart() {

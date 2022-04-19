@@ -46,8 +46,6 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
 
     private val comments = ArrayList<Comment>()         //保存评论区内容
 
-    @SuppressLint("NotifyDataSetChanged")
-    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -59,11 +57,20 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
         commentBinding.recyclerViewComment.layoutManager = LinearLayoutManager(requireContext())
         //配置RecyclerView
         initVideoAdapter()
+        return binding.root
+    }
 
+    @RequiresApi(Build.VERSION_CODES.R)
+    @SuppressLint("NotifyDataSetChanged")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        /*
         //向网络层请求数据，并对数据进行监听
         if (!viewModel.mediaPlayerIsInitialized()) {
             viewModel.getVideoList()
         }
+         */
+
         //监听视频列表
         viewModel.videoList.observe(viewLifecycleOwner, Observer { result ->
             val videos = result.getOrNull()
@@ -100,7 +107,6 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
                 result.exceptionOrNull()?.printStackTrace()
             }
         })
-        return binding.root
     }
 
     @SuppressLint("NotifyDataSetChanged")

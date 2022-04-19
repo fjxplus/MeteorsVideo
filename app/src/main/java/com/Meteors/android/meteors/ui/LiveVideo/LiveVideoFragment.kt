@@ -131,6 +131,11 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MainActivity.PlayerC
             adapter = commentAdapter
         }
 
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         //监听SurfaceView
         binding.surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             @RequiresApi(Build.VERSION_CODES.R)
@@ -154,8 +159,6 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MainActivity.PlayerC
         praiseController = PraiseController(requireContext(), binding.root)     //实例化点赞控制器
 
         initGiftDialog()        //实例化dialogBinding和GiftDialog，构建礼物中心
-
-        return binding.root
     }
 
     override fun onStart() {
@@ -376,6 +379,7 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MainActivity.PlayerC
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun startWorking() {
         isWorking = true
         startPlaying()
@@ -383,12 +387,19 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MainActivity.PlayerC
 
     override fun stopWorking() {
         player.pause()
+        viewModel.commentLoader.stopLoading()
         isWorking = false
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     fun startPlaying(){
-        if(this::player.isInitialized && isWorking && !binding.surfaceView.holder.isCreating){
-            player.start()
+        if(isWorking && !binding.surfaceView.holder.isCreating){
+            if (this::player.isInitialized){
+                player.start()
+            }else{
+                initMediaPlayer()
+            }
+            viewModel.commentLoader.startLoading()
         }
     }
 

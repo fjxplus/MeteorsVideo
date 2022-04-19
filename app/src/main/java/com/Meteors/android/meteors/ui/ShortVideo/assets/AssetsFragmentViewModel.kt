@@ -32,7 +32,7 @@ class AssetsFragmentViewModel: ViewModel() {
     }
 
     //判断mediaPlayerPool是否实例化
-    fun mediaPlayerIsInitialiazed(): Boolean {
+    fun mediaPlayerIsInitialized(): Boolean {
         return this::mediaPlayerPool.isInitialized
     }
 
