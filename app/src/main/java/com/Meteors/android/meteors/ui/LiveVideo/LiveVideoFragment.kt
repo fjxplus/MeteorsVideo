@@ -205,7 +205,7 @@ class LiveVideoFragment : Fragment(), View.OnClickListener, MainActivity.PlayerC
             }
             true
         }
-        //初始化CommentLoader， 开始加载评论
+        //初始化CommentLoader
         initCommentLoader()
     }
 

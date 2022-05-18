@@ -3,6 +3,8 @@ package com.Meteors.android.meteors.logic.network
 import android.util.Log
 import androidx.lifecycle.liveData
 import kotlinx.coroutines.Dispatchers
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 
 private const val TAG = "Meteors_Repository"
 /**
@@ -26,14 +28,15 @@ object Repository {
         emit(result)
     }
 
+
     /**
     * @Description: 获取视频流文件
     */
     fun getVideo(id: String) = liveData(Dispatchers.IO) {
         val result = try {
-            val videoStream = VideoNetwork.getVideo(id).byteStream()
-            //对视频文件流进行读取
-            Result.success(videoStream)
+            //获取视频的字节码数组
+            val videoBytes = VideoNetwork.getVideo(id).bytes()
+            Result.success(videoBytes)
         }catch (e: Exception){
             Log.d(TAG, "Repository无法获取Video")
             Result.failure(e)

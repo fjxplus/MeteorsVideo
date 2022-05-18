@@ -16,16 +16,13 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.Meteors.android.meteors.MainActivity
-import com.Meteors.android.meteors.MainApplication
-import com.Meteors.android.meteors.MediaPlayerPool
-import com.Meteors.android.meteors.R
+import com.Meteors.android.meteors.*
 import com.Meteors.android.meteors.databinding.CommentLayoutBinding
 import com.Meteors.android.meteors.databinding.FragmentMainBinding
 import com.Meteors.android.meteors.logic.model.Comment
 import com.Meteors.android.meteors.ui.NetFragmentViewModel
 import com.Meteors.android.meteors.ui.ShortVideo.recyclerView.CommentAdapter
-import com.Meteors.android.meteors.ui.ShortVideo.recyclerView.VideoAdapter
+import com.Meteors.android.meteors.ui.ShortVideo.recyclerView.VideoAdapter2
 
 private const val TAG = "Meteors_NetFragment"
 
@@ -42,10 +39,15 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
 
     private val binding get() = _binding!!      //当前布局的ViewBinding
 
-    private lateinit var videoAdapter: VideoAdapter     //Adapter
+    private lateinit var videoAdapter: VideoAdapter2     //Adapter
 
     private val comments = ArrayList<Comment>()         //保存评论区内容
 
+    private val popupWindow by lazy {       //展示评论区的PopupWindow
+        initPopupWindow()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,12 +66,6 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
     @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        /*
-        //向网络层请求数据，并对数据进行监听
-        if (!viewModel.mediaPlayerIsInitialized()) {
-            viewModel.getVideoList()
-        }
-         */
 
         //监听视频列表
         viewModel.videoList.observe(viewLifecycleOwner, Observer { result ->
@@ -77,14 +73,6 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
             if (videos != null) {
                 //此处应该设置列表为空时的处理
                 viewModel.videos.addAll(videos)
-                val windowWidth =
-                    requireActivity().windowManager.currentWindowMetrics.bounds.width()     //获取屏幕宽度，用于视频缩放
-                viewModel.mediaPlayerPool = viewModel.initMediaPlayerPool(
-                    requireContext(),
-                    viewModel.videos,
-                    MediaPlayerPool.SOURCE_NET,
-                    windowWidth
-                )      //实例化mediaPlayerPool
                 binding.imgHint.visibility = View.INVISIBLE
                 binding.recyclerView.visibility = View.VISIBLE
                 videoAdapter.notifyDataSetChanged()
@@ -124,16 +112,19 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
         //刷新组件的监听
         binding.refresh.setOnRefreshListener {
             Log.d(TAG, "refresh")
+            /*
             viewModel.refresh()     //触发数据更新
             binding.refresh.isRefreshing = true
             viewModel.getVideoList()        //向网络层请求数据，并对数据进行监听
+
+             */
         }
 
         //为评论按钮设置监听
         commentBinding.btnCommentCommit.setOnClickListener { view ->
             val content = commentBinding.editComment.text.toString()
             if (content != "") {
-                val comment = Comment(MainApplication.myId,MainApplication.myName, content)
+                val comment = Comment(MainApplication.myId, MainApplication.myName, content)
                 comments.add(0, comment)
                 commentBinding.recyclerViewComment.apply {
                     adapter?.notifyItemInserted(0)
@@ -155,9 +146,13 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
 
     override fun onPause() {
         super.onPause()
+        /*
         if (!viewModel.mediaPlayerPool.isPaused()) {
             videoAdapter.pauseVideo()
         }
+
+         */
+        videoAdapter.pauseVideo()
     }
 
     override fun onDestroyView() {
@@ -170,20 +165,22 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
      * @Param: videoList视频列表
      * @return: unit
      */
+    @RequiresApi(Build.VERSION_CODES.R)
     private fun initVideoAdapter() {
-        videoAdapter = VideoAdapter(requireContext(), viewModel.videos)
-        //实现VideoAdapter中未实现的高阶函数，需要Fragment提供实现，可以使用接口代替
-        //提供拿到MediaPlayer的方法
-        videoAdapter.getMediaPlayerPool = {
-            viewModel.mediaPlayerPool
-        }
-        //获取评论区的接口方法
-        videoAdapter.showComments = { videoId ->
+        val mediaResourceManager = MediaSourceManager(this)
+        val windowWidth = activity?.windowManager?.currentWindowMetrics?.bounds?.width()
+        videoAdapter = VideoAdapter2(
+            requireContext(),
+            viewModel.videos,
+            mediaResourceManager,
+            windowWidth!!
+        ) { videoId ->
             //向ViewModel请求评论区数据
             viewModel.getComments(videoId)
         }
+
         val pagerSnapHelper =
-            VideoAdapter.MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
+            VideoAdapter2.MyPagerSnapHelper()       //PagerSnapHelper用于让RecyclerView只显示一个Item在屏幕上
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = videoAdapter
@@ -197,19 +194,21 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
      * @return: unit
      */
     private fun showComment() {
-        //重新设置CommentAdapter
         commentBinding.recyclerViewComment.adapter = CommentAdapter(requireContext(), comments)
         commentBinding.editComment.text?.clear()
+        popupWindow.showAtLocation(binding.root, Gravity.BOTTOM, 0, 0)    //在底部展示PopUpView
+    }
 
-        val popUpView = PopupWindow(
+    private fun initPopupWindow(): PopupWindow {
+        val popUpWindow = PopupWindow(
             commentBinding.root,
             ViewGroup.LayoutParams.MATCH_PARENT,
             (binding.root.height * 0.7).toInt(),
             true
         )
-        popUpView.isOutsideTouchable = true
-        popUpView.isFocusable = true
-        popUpView.animationStyle = R.style.anim_comment
-        popUpView.showAtLocation(binding.root, Gravity.BOTTOM, 0, 0)        //在底部展示PopUpView
+        popUpWindow.isOutsideTouchable = true
+        popUpWindow.isFocusable = true
+        popUpWindow.animationStyle = R.style.anim_comment
+        return popUpWindow
     }
 }

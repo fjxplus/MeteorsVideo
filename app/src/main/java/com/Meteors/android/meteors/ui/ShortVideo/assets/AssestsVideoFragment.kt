@@ -2,7 +2,6 @@ package com.Meteors.android.meteors.ui.ShortVideo.assets
 
 import android.os.Build
 import android.os.Bundle
-import android.text.Editable
 import android.util.Log
 import android.view.*
 import android.widget.PopupWindow
@@ -42,6 +41,10 @@ class AssetsVideoFragment : Fragment(), MainActivity.PlayerController {
     private lateinit var videoAdapter: VideoAdapter     //Adapter
 
     private val comments = ArrayList<Comment>()     //用于保存评论区内容
+
+    private val popupWindow by lazy {       //展示评论区的PopupWindow
+        initPopupWindow()
+    }
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateView(
@@ -196,16 +199,19 @@ class AssetsVideoFragment : Fragment(), MainActivity.PlayerController {
     private fun showComment() {
         commentBinding.recyclerViewComment.adapter = CommentAdapter(requireContext(), comments)
         commentBinding.editComment.text?.clear()
+        popupWindow.showAtLocation(binding.root, Gravity.BOTTOM, 0, 0)    //在底部展示PopUpView
+    }
 
-        val popUpView = PopupWindow(
+    private fun initPopupWindow(): PopupWindow{
+        val popUpWindow = PopupWindow(
             commentBinding.root,
             ViewGroup.LayoutParams.MATCH_PARENT,
             (binding.root.height * 0.7).toInt(),
             true
         )
-        popUpView.isOutsideTouchable = true
-        popUpView.isFocusable = true
-        popUpView.animationStyle = R.style.anim_comment
-        popUpView.showAtLocation(binding.root, Gravity.BOTTOM, 0, 0)    //在底部展示PopUpView
+        popUpWindow.isOutsideTouchable = true
+        popUpWindow.isFocusable = true
+        popUpWindow.animationStyle = R.style.anim_comment
+        return popUpWindow
     }
 }

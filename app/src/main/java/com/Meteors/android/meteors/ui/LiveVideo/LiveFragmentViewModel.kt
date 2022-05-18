@@ -1,6 +1,7 @@
 package com.Meteors.android.meteors.ui.LiveVideo
 
 import android.os.Handler
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.Meteors.android.meteors.logic.model.Comment
@@ -21,7 +22,6 @@ class LiveFragmentViewModel: ViewModel() {
     fun initCommentLoader(updateHandler: Handler){
         commentLoader = CommentLoader(comments, updateHandler)
         commentLoader.start()
-        commentLoader.startLoading()
     }
 
     fun startLoading() {

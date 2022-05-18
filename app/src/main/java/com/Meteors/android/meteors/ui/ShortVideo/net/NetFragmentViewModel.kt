@@ -11,8 +11,6 @@ import com.Meteors.android.meteors.logic.network.Repository
 
 class NetFragmentViewModel : ViewModel() {
 
-    lateinit var mediaPlayerPool: MediaPlayerPool       //MediaPlayer的集中管理工具类
-
     private val videoListLiveData = MutableLiveData<Any>()
 
     val videos = ArrayList<VideoResponse>()
@@ -31,28 +29,10 @@ class NetFragmentViewModel : ViewModel() {
         getVideoList()
     }
 
-    //初始化mediaPlayerPool，如果未初始化就进行实例化
-    fun initMediaPlayerPool(
-        context: Context,
-        list: List<VideoResponse>,
-        sourceType: Int,
-        windowWidth: Int
-    ): MediaPlayerPool {
-        if (!this::mediaPlayerPool.isInitialized) {
-            mediaPlayerPool = MediaPlayerPool(context, list, sourceType, windowWidth)
-        }
-        return mediaPlayerPool
-    }
-
-    //判断mediaPlayerPool是否实例化
-    fun mediaPlayerIsInitialized(): Boolean {
-        return this::mediaPlayerPool.isInitialized
-    }
-
     //刷新，重新获取视频列表，对原有数据进行清除
     fun refresh(){
-        mediaPlayerPool.release()
         videos.clear()
+        getVideoList()
     }
 
     //获取视频接口，触发LiveData转换，向网络层获取视频
@@ -68,6 +48,5 @@ class NetFragmentViewModel : ViewModel() {
     //释放mediaPlayerPool
     override fun onCleared() {
         super.onCleared()
-        mediaPlayerPool.release()
     }
 }

@@ -3,6 +3,7 @@ package com.Meteors.android.meteors.logic.thread
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
+import android.util.Log
 import com.Meteors.android.meteors.logic.model.Comment
 import kotlin.random.Random
 
@@ -15,6 +16,7 @@ class CommentLoader(private val comments: ArrayList<Comment>, private val update
     /**
      * 控制评论区的下载
      */
+    @Volatile
     private var isWorking = false
 
     /**
@@ -48,6 +50,7 @@ class CommentLoader(private val comments: ArrayList<Comment>, private val update
      * 外部调用，停止加载
      */
     fun stopLoading() {
+        requestHandler.removeMessages(MESSAGE_LOADING)
         isWorking = false
     }
 
@@ -55,14 +58,12 @@ class CommentLoader(private val comments: ArrayList<Comment>, private val update
      * @Description: 根据isWorking变量，无限循环获取Comment， 这里进行模拟，随机产生评论数据，发送给主线程进行UI更新
      */
     private fun loading() {
-        if (isWorking) {
-            while (isWorking) {
-                synchronized(comments) {
-                    comments.add(randomComments[Random.nextInt(0, 9)])
-                    updateHandler.obtainMessage(MESSAGE_UPDATE).sendToTarget()
-                }
-                Thread.sleep((Random.nextInt(5, 50) * 100).toLong())
+        while (isWorking) {
+            synchronized(comments) {
+                comments.add(randomComments[Random.nextInt(0, 9)])
+                updateHandler.obtainMessage(MESSAGE_UPDATE).sendToTarget()
             }
+            Thread.sleep((Random.nextInt(5, 50) * 100).toLong())
         }
     }
 
