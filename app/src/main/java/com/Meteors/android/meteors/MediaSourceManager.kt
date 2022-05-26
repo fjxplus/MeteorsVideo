@@ -1,13 +1,12 @@
 package com.Meteors.android.meteors
 
 import android.media.MediaDataSource
-import android.os.Build
 import android.util.Log
 import android.util.LruCache
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import com.Meteors.android.meteors.logic.model.VideoResponse
 import com.Meteors.android.meteors.logic.network.Repository
+import java.io.InputStream
 
 private const val TAG = "Meteors_MediaPlayerPool"
 
@@ -40,10 +39,11 @@ class MediaSourceManager(
                 val videoLiveData = Repository.getVideo(videoID)
                 mLruCache.initSet.add(videoID)
                 videoLiveData.observe(lifecycleOwner, Observer { result ->
-                    val videoBytes = result.getOrNull()
-                    if (videoBytes != null) {
+                    //val videoBytes = result.getOrNull()
+                    val videoInputStream = result.getOrNull()
+                    if (videoInputStream != null) {
                         Log.d("Meteors_VideoAdapter2", "get stream success")
-                        dataSource = DataSource(videoBytes)
+                        dataSource = DataSource(videoInputStream)
                         mLruCache.put(videoID, dataSource)
                         callback.onSuccess(videoID, dataSource!!)
                     } else {
@@ -59,7 +59,7 @@ class MediaSourceManager(
         }
     }
 
-    fun release(){
+    fun release() {
         mLruCache.evictAll()
     }
 
@@ -87,13 +87,30 @@ class MediaSourceManager(
         }
     }
 
-    class DataSource(private val videoBytes: ByteArray) : MediaDataSource() {
+    class DataSource(private val videoInputStream: InputStream) : MediaDataSource() {
+        private val videoBytes = ArrayList<Byte>()
+        private var isStreamClosed = false
         override fun close() {
+            videoInputStream.close()
+            isStreamClosed = true
         }
 
         override fun readAt(position: Long, buffer: ByteArray?, offset: Int, size: Int): Int {
             if (size == 0) {
                 return 0
+            }
+            while (!isStreamClosed && videoBytes.size < position + size) {
+                //暂停， 显示缓存动画
+                val bytes = ByteArray(10240)
+                val len = videoInputStream.read(bytes)
+                if (len != -1) {
+                    videoBytes.ensureCapacity(videoBytes.size + 10240)
+                    for (j in 0 until len) {
+                        videoBytes.add(bytes[j])
+                    }
+                } else {
+                    close()
+                }
             }
             var pos = position.toInt()
             for (i in 0 until size) {
@@ -107,7 +124,11 @@ class MediaSourceManager(
         }
 
         override fun getSize(): Long {
-            return videoBytes.size.toLong()
+            return if (!isStreamClosed) {
+                -1
+            } else {
+                videoBytes.size.toLong()
+            }
         }
     }
 

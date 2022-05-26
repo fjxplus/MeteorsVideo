@@ -14,6 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.Meteors.android.meteors.MediaPlayerPool
 import com.Meteors.android.meteors.MediaSourceManager
 import com.Meteors.android.meteors.R
 import com.Meteors.android.meteors.databinding.VideoItemBinding
@@ -74,6 +75,12 @@ class VideoAdapter2(
         setOnCompletionListener {
             start()
         }
+        setOnBufferingUpdateListener { mediaPlayer, percent ->
+            Log.d(
+                "Test",
+                "onBufferingUpdate"
+            )
+        }
     }
 
     private val surfaceCallBack = object : SurfaceHolder.Callback {
@@ -122,6 +129,12 @@ class VideoAdapter2(
             adjustWindowSize()
             mediaPlayer.start()
         }
+    }
+
+    private fun startPlay() {
+        Log.d("Test", "startPlay()")
+        mediaPlayer.start()
+
     }
 
     private fun adjustWindowSize() {
@@ -274,6 +287,7 @@ class VideoAdapter2(
                     R.id.txt_ownerId -> {
                         Toast.makeText(context, "clicked ${video.ownerName}", Toast.LENGTH_SHORT)
                             .show()
+                        this@VideoAdapter2.startPlay()
                     }
                     R.id.txt_videoText -> {
                         Toast.makeText(context, "clicked ad", Toast.LENGTH_SHORT).show()

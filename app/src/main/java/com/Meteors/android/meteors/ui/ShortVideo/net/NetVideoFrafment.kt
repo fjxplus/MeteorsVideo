@@ -72,6 +72,10 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
             val videos = result.getOrNull()
             if (videos != null) {
                 //此处应该设置列表为空时的处理
+                if(videos.isEmpty()){
+                    Toast.makeText(requireContext(), "未获取到视频列表", Toast.LENGTH_SHORT).show()
+                    return@Observer
+                }
                 viewModel.videos.addAll(videos)
                 binding.imgHint.visibility = View.INVISIBLE
                 binding.recyclerView.visibility = View.VISIBLE
@@ -137,21 +141,25 @@ class NetVideoFragment : Fragment(), MainActivity.PlayerController {
     }
 
     override fun startWorking() {
+        if (viewModel.videos.isEmpty()){
+            Toast.makeText(requireContext(), "网络错误", Toast.LENGTH_SHORT).show()
+            return
+        }
         videoAdapter.startWork()
     }
 
     override fun stopWorking() {
+        if (viewModel.videos.isEmpty()){
+            return
+        }
         videoAdapter.stopWork()
     }
 
     override fun onPause() {
         super.onPause()
-        /*
-        if (!viewModel.mediaPlayerPool.isPaused()) {
-            videoAdapter.pauseVideo()
+        if (viewModel.videos.isEmpty()){
+            return
         }
-
-         */
         videoAdapter.pauseVideo()
     }
 

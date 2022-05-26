@@ -35,7 +35,9 @@ object Repository {
     fun getVideo(id: String) = liveData(Dispatchers.IO) {
         val result = try {
             //获取视频的字节码数组
-            val videoBytes = VideoNetwork.getVideo(id).bytes()
+            //val videoBytes = VideoNetwork.getVideo(id).bytes()
+            val videoBytes = VideoNetwork.getVideo(id).byteStream()
+            Log.d("Test", "获取到流文件")
             Result.success(videoBytes)
         }catch (e: Exception){
             Log.d(TAG, "Repository无法获取Video")
