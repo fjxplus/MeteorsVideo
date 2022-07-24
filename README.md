@@ -1,4 +1,4 @@
-# MeteorsVideo
+# MeteorsVideo(后端服务器到期不能使用了)
 软件大体两个功能：(增加了ViewPager2，可以左右滑动啦)
 
 1. 刷短视频功能：
